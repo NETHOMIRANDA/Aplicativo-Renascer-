@@ -52,9 +52,10 @@ input, textarea, select { font-family: inherit; font-size: 16px; }
   box-shadow: var(--sombra);
 }
 
-.marca { display: flex; align-items: center; gap: 10px; }
-.marca-logo { width: 38px; height: 38px; border-radius: 10px; }
-.marca-texto strong { display: block; font-size: 17px; letter-spacing: .5px; }
+.marca { display: flex; align-items: center; gap: 10px; flex: 1 1 auto; min-width: 0; }
+.marca-logo { width: 38px; height: 38px; border-radius: 10px; flex: 0 0 auto; }
+.marca-texto { min-width: 0; }
+.marca-texto strong { display: block; font-size: 16px; letter-spacing: .3px; line-height: 1.15; word-break: break-word; }
 .marca-texto span { font-size: 11.5px; color: var(--azul-300); }
 
 .btn-carrinho {

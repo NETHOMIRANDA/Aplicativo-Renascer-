@@ -652,6 +652,10 @@
   function rodape() {
     var cfg = Store.config();
     $("msgBoasVindas").textContent = cfg.msgBoasVindas;
+    var nome = String(cfg.nomeLoja || "").trim() || "RENASCRE LOCACOES & EVENTOS";
+    $("marcaNome").textContent = nome;
+    if ($("rodapeNome")) $("rodapeNome").textContent = nome;
+    document.title = nome;
     var zap = String(cfg.whatsapp).replace(/^55/, "").replace(/^(\d{2})(\d{5})(\d{4})$/, "($1) $2-$3");
     $("rodapeContato").textContent = "WhatsApp: " + zap;
   }
