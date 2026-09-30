@@ -1,0 +1,36 @@
+{
+  "name": "RENASCRE Locações & Eventos",
+  "short_name": "RENASCRE",
+  "description": "Catálogo, pedidos e pagamento PIX da RENASCRE Locações & Eventos.",
+  "lang": "pt-BR",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0F172A",
+  "theme_color": "#0F172A",
+  "icons": [
+    {
+      "src": "img/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "img/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Fazer pedido",
+      "url": "./index.html"
+    },
+    {
+      "name": "Painel do administrador",
+      "url": "./admin.html"
+    }
+  ]
+}

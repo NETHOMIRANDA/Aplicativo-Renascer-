@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#7C2D12">
+<title>Admin • RENASCRE Locações & Eventos</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="img/icon-192.png">
+<link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<!-- ================= LOGIN ================= -->
+<div id="telaLogin">
+  <div class="login-caixa">
+    <h1>🔒 Área do Administrador</h1>
+    <p>Digite a senha para gerenciar itens, pedidos e pagamentos.</p>
+    <input type="password" id="senhaLogin" placeholder="Senha" inputmode="numeric" autocomplete="off">
+    <p class="erro" id="erroLogin" hidden>Senha incorreta.</p>
+    <label style="font-size:13.5px;color:#64748B;display:flex;gap:8px;align-items:center;margin:6px 0 2px;">
+      <input type="checkbox" id="manterConectado" style="width:auto;margin:0;"> Manter conectado neste aparelho
+    </label>
+    <button class="primario grande" id="btnLogin">Entrar</button>
+    <a class="zap" href="index.html">← Voltar para o aplicativo do cliente</a>
+  </div>
+</div>
+
+<!-- ================= APP ADMIN ================= -->
+<div id="appAdmin" hidden>
+  <header class="admin-topo">
+    <h1>⚙️ Painel do Administrador</h1>
+    <button class="sair" id="btnSair">Sair</button>
+  </header>
+
+  <nav class="abas" id="abas">
+    <button class="aba ativo" data-aba="pedidos">📨 Pedidos <span class="cont" id="contPedidos">0</span></button>
+    <button class="aba" data-aba="itens">🛋️ Itens</button>
+    <button class="aba" data-aba="fotos">🖼️ Fotos</button>
+    <button class="aba" data-aba="ajustes">⚙️ Ajustes</button>
+    <button class="aba" data-aba="backup">💾 Backup</button>
+  </nav>
+
+  <main class="conteudo">
+
+    <!-- ============ PEDIDOS ============ -->
+    <section id="abaPedidos">
+      <div class="filtros-admin" id="filtrosPedidos">
+        <button class="ativo" data-f="pendentes">Pendentes</button>
+        <button data-f="todos">Todos</button>
+        <button data-f="aguardando">Aguardando</button>
+        <button data-f="aprovado">Aprovados</button>
+        <button data-f="pagos">Pagos</button>
+        <button data-f="recusado">Recusados</button>
+      </div>
+      <div id="listaPedidos"></div>
+    </section>
+
+    <!-- ============ ITENS ============ -->
+    <section id="abaItens" hidden>
+      <div class="bloco">
+        <h2>Novo item</h2>
+        <div class="grade-campos">
+          <label class="campo">Nome
+            <input type="text" id="nNome" placeholder="Ex.: Mesa redonda 6 lugares">
+          </label>
+          <label class="campo">Categoria
+            <input type="text" id="nCategoria" list="listaCategorias" placeholder="Ex.: MOBILIÁRIO & MESAS">
+            <datalist id="listaCategorias"></datalist>
+          </label>
+          <label class="campo">Unidade
+            <input type="text" id="nUnidade" placeholder="Unidade / Jogo / Diária">
+          </label>
+          <label class="campo">Preço (R$)
+            <input type="number" id="nPreco" step="0.01" min="0" inputmode="decimal">
+          </label>
+          <label class="campo">Estoque
+            <input type="number" id="nEstoque" step="1" min="0" inputmode="numeric" value="1">
+          </label>
+          <label class="campo">Foto
+            <input type="file" id="nFoto" accept="image/*">
+          </label>
+        </div>
+        <div id="nFotoPreview"></div>
+        <button class="primario" id="btnAddItem">➕ Adicionar item</button>
+      </div>
+
+      <div class="bloco">
+        <h2>Itens do catálogo</h2>
+        <label class="campo">Buscar
+          <input type="search" id="buscaItens" placeholder="Nome ou categoria...">
+        </label>
+        <div id="listaItensAdmin"></div>
+      </div>
+    </section>
+
+    <!-- ============ FOTOS ============ -->
+    <section id="abaFotos" hidden>
+      <div class="bloco">
+        <h2>Galeria de fotos</h2>
+        <p class="suave">Adicione fotos dos itens. Elas ficam disponíveis para você escolher ao editar cada item.</p>
+        <label class="campo">Enviar nova foto
+          <input type="file" id="addFoto" accept="image/*" multiple>
+        </label>
+        <div class="galeria" id="galeriaFotos"></div>
+      </div>
+    </section>
+
+    <!-- ============ AJUSTES ============ -->
+    <section id="abaAjustes" hidden>
+      <div class="bloco">
+        <h2>Dados gerais</h2>
+        <label class="campo">Nome da empresa
+          <input type="text" id="cNomeLoja">
+        </label>
+        <label class="campo">Mensagem de boas-vindas
+          <textarea id="cBoasVindas" rows="2"></textarea>
+        </label>
+        <label class="campo">WhatsApp (só números, com DDI)
+          <input type="text" id="cWhats" placeholder="5562982240434">
+        </label>
+      </div>
+
+      <div class="bloco">
+        <h2>💳 Pagamento PIX</h2>
+        <label class="campo">Chave PIX
+          <input type="text" id="cPixChave" placeholder="5562982240434">
+        </label>
+        <div class="grade-campos">
+          <label class="campo">Nome do titular
+            <input type="text" id="cPixNome" maxlength="25">
+          </label>
+          <label class="campo">Cidade
+            <input type="text" id="cPixCidade" maxlength="15">
+          </label>
+        </div>
+        <p class="suave">O QR Code é gerado automaticamente com o valor do pedido.</p>
+      </div>
+
+      <div class="bloco">
+        <h2>🔐 Segurança</h2>
+        <label class="campo">Senha do administrador
+          <input type="text" id="cSenha" placeholder="A103114">
+        </label>
+        <label class="campo">Mensagem exibida quando o pedido é aprovado
+          <input type="text" id="cMsgAprovado">
+        </label>
+        <button class="primario" id="btnSalvarAjustes">💾 Salvar ajustes</button>
+      </div>
+    </section>
+
+    <!-- ============ BACKUP ============ -->
+    <section id="abaBackup" hidden>
+      <div class="bloco">
+        <h2>Backup dos dados</h2>
+        <div class="aviso-espaco" id="avisoEspaco">Armazenamento usado: calculando...</div>
+        <p class="suave">Exporte um arquivo .json para guardar seus itens, fotos e pedidos. Importe para restaurar em outro aparelho.</p>
+        <div class="botoes-linha">
+          <button id="btnExportar">⬇️ Exportar backup</button>
+          <button class="claro" id="btnImportar">⬆️ Importar backup</button>
+          <input type="file" id="arquivoImport" accept="application/json,.json" hidden>
+        </div>
+      </div>
+
+      <div class="bloco">
+        <h2>Manutenção</h2>
+        <div class="botoes-linha">
+          <button class="claro" id="btnRestaurarCatalogo">♻️ Restaurar catálogo original</button>
+          <button class="perigo" id="btnLimparTudo">🗑️ Apagar TODOS os dados</button>
+        </div>
+      </div>
+
+      <div class="bloco">
+        <h2>Acesso do cliente</h2>
+        <p class="suave">O cliente entra pelo aplicativo (index.html). O acesso discreto no rodapé leva a esta tela — você pode testar:</p>
+        <a class="zap" href="index.html" style="max-width:260px;">Abrir aplicativo do cliente</a>
+      </div>
+    </section>
+
+  </main>
+
+  <div class="barra-status" id="barraStatus">RENASCRE • painel do administrador</div>
+</div>
+
+<!-- ================= MODAL GENÉRICO ================= -->
+<div class="overlay" id="ovModal" hidden>
+  <div class="sheet">
+    <div class="sheet-topo">
+      <h2 id="modalTitulo">Editar</h2>
+      <button class="fechar" id="btnFecharModal">✕</button>
+    </div>
+    <div class="sheet-corpo" id="modalCorpo"></div>
+    <div class="sheet-pe" id="modalPe"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast" hidden></div>
+
+<script src="js/catalogo-seed.js"></script>
+<script src="js/fotos-seed.js"></script>
+<script src="js/store.js"></script>
+<script src="js/pix.js"></script>
+<script src="js/qrcode.js"></script>
+<script src="js/admin.js"></script>
+</body>
+</html>
