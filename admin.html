@@ -37,6 +37,7 @@
 
   <nav class="abas" id="abas">
     <button class="aba ativo" data-aba="pedidos">📨 Pedidos <span class="cont" id="contPedidos">0</span></button>
+    <button class="aba" data-aba="entrega">🚚 Entrega</button>
     <button class="aba" data-aba="itens">🛋️ Itens</button>
     <button class="aba" data-aba="fotos">🖼️ Fotos</button>
     <button class="aba" data-aba="ajustes">⚙️ Ajustes</button>
@@ -56,6 +57,46 @@
         <button data-f="recusado">Recusados</button>
       </div>
       <div id="listaPedidos"></div>
+    </section>
+
+    <!-- ============ ENTREGA ============ -->
+    <section id="abaEntrega" hidden>
+      <div class="bloco">
+        <h2>🚚 Gestão de entrega</h2>
+        <p class="suave">Selecione o período, marque os pedidos que serão entregues na semana e gere o PDF (folha de entrega) e o relatório de materiais.</p>
+        <div class="grade-campos">
+          <label class="campo">Período
+            <select id="periodoEntrega">
+              <option value="semana">Semana atual (segunda a domingo)</option>
+              <option value="proxima">Próxima semana</option>
+              <option value="duas">Próximas 2 semanas</option>
+              <option value="todos">Todos os pedidos</option>
+              <option value="custom">Personalizado (datas)</option>
+            </select>
+          </label>
+          <div class="campo" id="datasCustom" hidden>
+            <span class="rotulo">De</span>
+            <input type="date" id="dataIni">
+            <span class="rotulo">Até</span>
+            <input type="date" id="dataFim">
+          </div>
+        </div>
+        <div class="botoes-linha">
+          <button id="btnMarcarTodos">☑️ Selecionar todos</button>
+          <button class="claro" id="btnMarcarNenhum">☐ Limpar seleção</button>
+        </div>
+        <div id="listaEntregas"></div>
+      </div>
+
+      <div class="bloco">
+        <h2>PDF e relatório</h2>
+        <p class="suave">A folha de entrega sai com todos os pedidos marcados + a consolidação de materiais. Na janela de impressão escolha <strong>Salvar como PDF</strong> para baixar o arquivo.</p>
+        <div class="botoes-linha">
+          <button class="primario" id="btnImprimirEntregas">🖨 Gerar PDF / Imprimir</button>
+          <button id="btnRelatorioEntregas">📊 Relatório de materiais</button>
+          <button class="claro" id="btnConcluirEntregas">🏁 Marcar como entregue</button>
+        </div>
+      </div>
     </section>
 
     <!-- ============ ITENS ============ -->
@@ -142,18 +183,22 @@
       <div class="bloco">
         <h2>🚚 Entrega e frete</h2>
         <div class="grade-campos">
-          <label class="campo">Frete padrão (R$)
-            <input type="number" id="cFretePadrao" step="0.01" min="0" placeholder="0">
+          <label class="campo">CEP de destino da loja
+            <input type="text" id="cFreteCepDestino" inputmode="numeric" maxlength="9" placeholder="74353-400">
+          </label>
+          <label class="campo">Frete padrão quando nenhuma faixa casa (R$)
+            <input type="text" id="cFretePadrao" inputmode="decimal" placeholder="0">
           </label>
           <label class="campo">Frete grátis acima de (R$) — 0 = nunca
-            <input type="number" id="cFreteGratis" step="0.01" min="0" placeholder="0">
+            <input type="text" id="cFreteGratis" inputmode="decimal" placeholder="0">
           </label>
         </div>
-        <label class="campo">Tabela por cidade — uma por linha no formato <strong>Cidade/UF = valor</strong>
-          <textarea id="cFreteCidades" rows="5" placeholder="GOIANIA/GO = 35&#10;APARECIDA DE GOIANIA/GO = 45&#10;SENADOR CANEDO/GO = 55"></textarea>
+        <label class="campo">Tabela por faixa de CEP — uma por linha no formato <strong>faixa = valor</strong>
+          <textarea id="cFreteCepTabela" rows="6" placeholder="74353 = 40&#10;74400 = 55&#10;70000000-73699999 = 70"></textarea>
         </label>
-        <p class="suave">O cliente digita o <strong>CEP</strong>, o app busca rua/bairro/cidade e cobra o frete da cidade que casar com a linha acima.
-        Se não casar nenhuma, vale o frete padrão. Deixe tudo zerado para não cobrar frete.</p>
+        <p class="suave">O cliente digita o <strong>CEP</strong> (validado nos Correios, com rua/bairro/cidade preenchidos) e o frete sai da faixa correspondente até o <strong>CEP de destino da loja</strong>.
+        Formato: <strong>74353 = 40</strong> (5 primeiros dígitos) ou <strong>70000000-73699999 = 70</strong> (intervalo completo de 8 dígitos).
+        Linhas iniciadas com <strong>#</strong> são ignoradas. Se nenhuma faixa casar, vale o frete padrão; deixe tudo zerado para não cobrar frete.</p>
       </div>
 
       <div class="bloco">
@@ -214,6 +259,9 @@
 </div>
 
 <div class="toast" id="toast" hidden></div>
+
+<!-- ================= ÁREA DE IMPRESSÃO (PDF) ================= -->
+<div id="areaImpressao" class="area-impressao" hidden></div>
 
 <script src="js/catalogo-seed.js"></script>
 <script src="js/fotos-seed.js"></script>
