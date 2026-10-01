@@ -140,6 +140,23 @@
       </div>
 
       <div class="bloco">
+        <h2>🚚 Entrega e frete</h2>
+        <div class="grade-campos">
+          <label class="campo">Frete padrão (R$)
+            <input type="number" id="cFretePadrao" step="0.01" min="0" placeholder="0">
+          </label>
+          <label class="campo">Frete grátis acima de (R$) — 0 = nunca
+            <input type="number" id="cFreteGratis" step="0.01" min="0" placeholder="0">
+          </label>
+        </div>
+        <label class="campo">Tabela por cidade — uma por linha no formato <strong>Cidade/UF = valor</strong>
+          <textarea id="cFreteCidades" rows="5" placeholder="GOIANIA/GO = 35&#10;APARECIDA DE GOIANIA/GO = 45&#10;SENADOR CANEDO/GO = 55"></textarea>
+        </label>
+        <p class="suave">O cliente digita o <strong>CEP</strong>, o app busca rua/bairro/cidade e cobra o frete da cidade que casar com a linha acima.
+        Se não casar nenhuma, vale o frete padrão. Deixe tudo zerado para não cobrar frete.</p>
+      </div>
+
+      <div class="bloco">
         <h2>🔐 Segurança</h2>
         <label class="campo">Senha do administrador
           <input type="text" id="cSenha" placeholder="A103114">
@@ -201,6 +218,7 @@
 <script src="js/catalogo-seed.js"></script>
 <script src="js/fotos-seed.js"></script>
 <script src="js/store.js"></script>
+<script src="js/sync.js"></script>
 <script src="js/pix.js"></script>
 <script src="js/qrcode.js"></script>
 <script src="js/admin.js"></script>

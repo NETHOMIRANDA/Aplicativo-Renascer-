@@ -20,8 +20,8 @@
   <div class="marca" id="marcaLogo" title="">
     <img src="img/icon-192.png" alt="" class="marca-logo">
     <div class="marca-texto">
-      <strong>RENASCRE</strong>
-      <span>Locações &amp; Eventos</span>
+      <strong id="marcaNome">RENASCRE</strong>
+      <span id="marcaSub" hidden>Locações &amp; Eventos</span>
     </div>
   </div>
   <button class="btn-carrinho" id="btnCarrinho" aria-label="Abrir carrinho">
@@ -69,7 +69,7 @@
 <!-- ================= RODAPÉ ================= -->
 <footer class="rodape">
   <p id="rodapeContato">WhatsApp: (62) 98224-0434</p>
-  <p class="suave">RENASCRE Locações &amp; Eventos</p>
+  <p class="suave" id="rodapeNome">RENASCRE Locações &amp; Eventos</p>
   <span class="ponto-secreto" id="pontoSecreto" title="">•</span>
 </footer>
 
@@ -111,9 +111,22 @@
       <label>Data do evento
         <input type="date" id="fData">
       </label>
-      <label>Bairro / endereço
-        <input type="text" id="fEndereco" placeholder="Bairro, rua ou ponto de referência">
+      <label>CEP *
+        <input type="text" id="fCep" inputmode="numeric" maxlength="9" placeholder="00000-000" autocomplete="postal-code">
       </label>
+      <p class="suave" id="statusCep" hidden></p>
+      <label>Rua / endereço *
+        <input type="text" id="fEndereco" placeholder="Rua, número ou ponto de referência" autocomplete="street-address">
+      </label>
+      <div class="grade-campos">
+        <label>Bairro
+          <input type="text" id="fBairro" placeholder="Bairro" autocomplete="address-level3">
+        </label>
+        <label>Cidade / UF
+          <input type="text" id="fCidade" placeholder="Cidade / UF">
+        </label>
+      </div>
+      <div class="frete-preview" id="fretePreview" hidden></div>
       <label>Observações
         <textarea id="fObs" rows="3" placeholder="Horário de retirada, entrega, detalhes..."></textarea>
       </label>
@@ -158,6 +171,7 @@
 <script src="js/catalogo-seed.js"></script>
 <script src="js/fotos-seed.js"></script>
 <script src="js/store.js"></script>
+<script src="js/sync.js"></script>
 <script src="js/pix.js"></script>
 <script src="js/qrcode.js"></script>
 <script src="js/app.js"></script>
