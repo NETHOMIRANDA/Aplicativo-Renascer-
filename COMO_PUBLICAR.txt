@@ -1,0 +1,124 @@
+========================================================
+ COMO PUBLICAR O APLICATIVO NO GITHUB  (passo a passo)
+ RENASCRE Locações & Eventos
+========================================================
+
+Você NÃO precisa saber programar. São 6 passos e leva uns 10 minutos.
+Depois o app fica endereçado assim:  https://seuusuario.github.io/renascer/
+
+--------------------------------------------------------
+ PASSO 1 — Criar a conta no GitHub (1x só)
+--------------------------------------------------------
+1. Abra o navegador e acesse:  https://github.com
+2. Clique em  "Sign up".
+3. Digite seu e-mail, uma senha e escolha um nome de usuário
+   (ex.: renascerlocacoes  →  seu endereço vira github.com/renascerlocacoes).
+4. Resolva o desafio e clique em  "Create account".
+5. Abra o e-mail que eles enviam e clique no botão de confirmação.
+
+--------------------------------------------------------
+ PASSO 2 — Criar o repositório (onde os arquivos vão morar)
+--------------------------------------------------------
+1. Logado no GitHub, clique no sinal  "+"  (canto superior direito)
+   e depois em  "New repository".
+2. Repository name:  renascer
+3. Marque  "Public"  (obrigatório para o app ficar grátis e aberto).
+4. NÃO marque "Add a README".
+5. Clique em  "Create repository".
+
+--------------------------------------------------------
+ PASSO 3 — Enviar os arquivos do aplicativo
+--------------------------------------------------------
+1. Na página do seu repositório, clique em  "Add file"
+   →  "Upload files".
+2. Arraste TODA a pasta do aplicativo
+   (a pasta  "Modelo Renascer 1 - Copia") para a área de upload.
+   O GitHub cria as subpastas  css/, js/  e  img/  automaticamente.
+   * Se não arrastar a pasta, selecione todos os arquivos e pastas
+     de uma vez e envie.
+3. Espere os arquivos carregarem e clique em  "Commit changes".
+
+Checklist do que precisa ser enviado:
+   index.html
+   admin.html
+   manifest.json
+   sw.js
+   README.md
+   COMO_PUBLICAR.txt
+   css/      (styles.css)
+   js/       (catalogo-seed.js, fotos-seed.js, store.js, pix.js,
+              qrcode.js, app.js, admin.js)
+   img/      (foto-01.jpg ... foto-24.jpg e os ícones)
+
+--------------------------------------------------------
+ PASSO 4 — Ativar o GitHub Pages (transforma em site/app)
+--------------------------------------------------------
+1. No repositório, clique na aba  "Settings"  (engrenagem).
+2. No menu da esquerda, clique em  "Pages".
+3. Em  "Build and deployment"  → Source:  "Deploy from a branch".
+4. Em  Branch: escolha  "main"  e  "/ (root)".
+5. Clique em  "Save".
+6. Espere 1 ou 2 minutos e recarregue a página.
+
+--------------------------------------------------------
+ PASSO 5 — Descobrir o endereço do seu aplicativo
+--------------------------------------------------------
+Volte em  Settings → Pages  e verá algo como:
+
+        Your site is live at
+        https://SEUUSUARIO.github.io/renascer/
+
+Copie esse endereço. É o link do seu aplicativo.
+
+--------------------------------------------------------
+ PASSO 6 — Instalar no celular (fica como aplicativo de verdade)
+--------------------------------------------------------
+Android (Chrome):
+   1. Abra o endereço no Chrome.
+   2. Toque nos 3 pontinhos ⋮  →  "Adicionar à tela inicial"
+      (ou "Instalar aplicativo").
+   3. Confirme. O ícone RENASCRE aparece na tela.
+
+iPhone (Safari):
+   1. Abra o endereço no Safari.
+   2. Toque em  Compartilhar  (quadrado com seta)  →
+      "Adicionar à Tela de Início".
+   3. Confirme.
+
+Pronto: abre em tela cheia, sem barra do navegador, e funciona offline.
+
+========================================================
+ ATUALIZANDO DEPOIS (quando você mudar itens/fotos/ajustes)
+========================================================
+- Mudanças feitas DENTRO do app (painel admin) ficam salvas no aparelho
+  e não precisam de upload. Mas faça  Backup (aba 💾)  para não perder.
+- Se você alterar arquivos no computador, envie de novo:
+  repositório → "Add file" → "Upload files" → arraste os arquivos
+  substitutos → "Commit changes". O GitHub atualiza o site sozinho.
+  IMPORTANTE: depois de alterar qualquer arquivo .js/.css/.html,
+  abra o  sw.js  e mude  renascer-v1  para  renascer-v2  (número maior
+  a cada edição) e envie também. Assim todos os celulares que já
+  instalaram o app baixam a versão nova em vez da antiga.
+
+========================================================
+ DICAS IMPORTANTES
+========================================================
+1. SENHA do administrador:  A103114
+   (alterável no painel, aba Ajustes). O acesso discreto fica no
+   pontinho quase invisível no rodapé do app do cliente — ou abrindo
+   admin.html direto no navegador.)
+
+2. DADOS: como não há servidor, os pedidos ficam gravados no aparelho
+   usado. Se você usar o mesmo celular no app do cliente e no painel
+   do administrador, tudo funciona de ponta a ponta: pedido → aprovação
+   → aviso com som/emoji → PIX → confirmação.
+
+3. PIX: chave padrão  5562982240434 . O QR Code é gerado sozinho com
+   o valor total do pedido. Teste escaneando com o app do seu banco.
+
+4. BACKUP: exporte o .json de vez em quando e guarde no computador.
+
+5. Para testar o app no computador antes de publicar, dê dois cliques
+   em  index.html  (abre direto no navegador).
+
+========================================================

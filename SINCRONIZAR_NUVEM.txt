@@ -1,0 +1,128 @@
+================================================================
+  SINCRONIZAÇÃO EM NUVEM — celular x computador (grátis)
+  RENASCRE Locações & Eventos
+================================================================
+
+POR QUE ISSO EXISTE
+--------------------
+O aplicativo é estático: cada aparelho guarda os dados no próprio
+navegador. Sem uma "ponte", o pedido feito no celular não aparece no
+painel do computador.
+
+Esta ponte é uma planilha do Google Sheets + um script do Google
+(Apps Script). É gratuita, não tem prazo e não precisa de cartão.
+
+Tempo de configuração: uns 5 minutos, uma única vez.
+
+
+PARTE 1 — CRIAR A PONTE (no computador, no navegador)
+-----------------------------------------------------
+1. Abra https://sheets.new  (faça login na sua conta Google).
+2. Dê um nome qualquer à planilha, por exemplo: RENASCRE-SINCRONIZACAO
+3. No menu superior, clique em  Extensões > Apps Script.
+4. Apague TUDO que estiver na aba de código (Ctrl+A, Delete).
+5. Cole o código que está no bloco "CÓDIGO" abaixo (Ctrl+V).
+6. Clique no ícone de disquete (Salvar) ou Ctrl+S.
+7. Clique em  Implementar > Nova implementação.
+8. Em "Tipo", escolha  Aplicativo da Web  (Web app).
+9. Configure:
+      Executar como:  Minha conta (e-mail seu)
+      Quem tem acesso: Qualquer pessoa
+10. Clique em  Implementar  e COPIE o endereço que aparece
+    (começa com https://script.google.com/macros/s/.../exec).
+11. Clique em  Concluído  e pode fechar a aba do Apps Script.
+
+
+PARTE 2 — COLAR O ENDEREÇO NO PAINEL
+-------------------------------------
+1. Abra o painel do administrador (admin.html) > aba  ⚙️ Ajustes.
+2. Role até  🔄 Sincronização (celular ↔ computador).
+3. Cole o endereço copiado no campo  "Endereço da ponte".
+4. Mantenha marcado  "Sincronizar automaticamente".
+5. Clique em  🔌 Testar conexão  → deve aparecer
+   "Conectado! Dados encontrados na planilha."
+6. Clique em  💾 Salvar ajustes  no final da aba.
+
+
+PARTE 3 — NO CELULAR
+---------------------
+1. Abra o aplicativo do cliente e vá em  ⚙️ (ou o menu) > Ajustes
+   do administrador  (mesmo caminho de sempre, senha A103114).
+   OBS.: se o seu app do cliente não tem a tela de ajustes, basta
+   abrir admin.html no navegador do celular e entrar com a senha.
+2. Cole o MESMO endereço da ponte em  🔄 Sincronização  e salve.
+3. Pronto: pedido enviado no celular passa a aparecer no
+   computador em até 30 segundos (ou na hora, com
+   "🔄 Sincronizar agora").
+
+
+COMO FUNCIONA
+-------------
+- Os dois aparelhos leem a planilha a cada 30 segundos.
+- Sempre que um deles manda dados, ele PRIMEIRO baixa o que existe
+  na planilha, mescla (vale a alteração mais recente) e só então
+  envia de volta. Assim nada se perde.
+- Itens apagados também são propagados (exclusão confirmada).
+- As fotos ENVIADAS POR VOCÊ no painel não sobem para a nuvem
+  (peso demais); só as fotos dos itens que já vêm no catálogo.
+- Se a nuvem estiver desativada, o app continua funcionando
+  exatamente como antes, só que por aparelho.
+
+
+SOLUÇÃO DE PROBLEMAS
+--------------------
+"erro: Not Found"          → o endereço não é de implementação do
+                             tipo "Aplicativo da Web". Refaça a
+                             Parte 1, item 7-10.
+"erro: A configuração de acesso..." → em "Quem tem acesso" escolha
+                             "Qualquer pessoa" e implemente de novo
+                             (gere uma NOVA implementação).
+"Sem internet"             → a ponte precisa de rede nos dois lados.
+Nada aparece no outro       → clique em "🔄 Sincronizar agora" nos
+                             dois lados e confira se os dois usam o
+                             MESMO endereço.
+
+
+================================================================
+  CÓDIGO  (cole isto no Apps Script)
+================================================================
+
+function doGet(e) {
+  var acao = (e && e.parameter && e.parameter.acao) || "";
+  if (acao === "estado") return json({ estado: lerEstado() });
+  return json({ estado: lerEstado() });
+}
+
+function doPost(e) {
+  var dados = JSON.parse(e.postData.contents);
+  if (dados && dados.acao === "salvar" && dados.estado) {
+    gravarEstado(dados.estado);
+  }
+  return json({ estado: lerEstado() });
+}
+
+function json(obj) {
+  return ContentService
+    .createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+/* --- armazenamento: uma única célula com o JSON completo --- */
+var ABA = "estado";
+
+function planilha() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var ab = ss.getSheetByName(ABA);
+  if (!ab) ab = ss.insertSheet(ABA);
+  return ab;
+}
+
+function lerEstado() {
+  var v = planilha().getRange("A1").getValue();
+  if (!v) return {};
+  try { return JSON.parse(v); } catch (err) { return {}; }
+}
+
+function gravarEstado(estado) {
+  planilha().getRange("A1").setValue(JSON.stringify(estado));
+}

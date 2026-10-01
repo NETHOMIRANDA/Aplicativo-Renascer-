@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0F172A">
+<title>RENASCRE Locações & Eventos</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="img/icon-192.png">
+<link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<!-- ================= CABEÇALHO ================= -->
+<header class="topo">
+  <div class="marca" id="marcaLogo" title="">
+    <img src="img/icon-192.png" alt="" class="marca-logo">
+    <div class="marca-texto">
+      <strong id="marcaNome">RENASCRE</strong>
+      <span id="marcaSub" hidden>Locações &amp; Eventos</span>
+    </div>
+  </div>
+  <button class="btn-carrinho" id="btnCarrinho" aria-label="Abrir carrinho">
+    🛒<span class="badge" id="badgeCarrinho">0</span>
+  </button>
+</header>
+
+<!-- ================= HERO ================= -->
+<section class="hero">
+  <h1>Monte seu evento</h1>
+  <p id="msgBoasVindas">Escolha os itens, envie o pedido e aguarde nossa homologação.</p>
+</section>
+
+<!-- ================= BUSCA / CATEGORIAS ================= -->
+<div class="filtros">
+  <input type="search" id="busca" class="busca" placeholder="🔍 Buscar item...">
+  <div class="chips" id="chips"></div>
+</div>
+
+<!-- ================= CATÁLOGO ================= -->
+<main>
+  <div class="grid" id="listaItens"></div>
+  <div class="vazio" id="listaVazia" hidden>Nenhum item encontrado.</div>
+
+  <!-- ============ MEU PEDIDO / STATUS ============ -->
+  <section class="painel" id="painelPedido">
+    <h2>📋 Meu pedido</h2>
+    <div id="statusPedido" class="status-caixa">
+      <p class="suave">Você ainda não enviou nenhum pedido.</p>
+    </div>
+  </section>
+
+  <section class="painel sobre">
+    <h3>Como funciona</h3>
+    <ol class="passos">
+      <li>Escolha os itens e informe as quantidades.</li>
+      <li>Envie o pedido com seus dados.</li>
+      <li>Aguarda a <strong>homologação</strong> do administrador.</li>
+      <li>Receba a confirmação 🔊🎉 e faça o <strong>pagamento PIX</strong>.</li>
+      <li>Retire ou receba os itens na data combinada.</li>
+    </ol>
+  </section>
+</main>
+
+<!-- ================= RODAPÉ ================= -->
+<footer class="rodape">
+  <p id="rodapeContato">WhatsApp: (62) 98224-0434</p>
+  <p class="suave" id="rodapeNome">RENASCRE Locações &amp; Eventos</p>
+  <span class="ponto-secreto" id="pontoSecreto" title="">•</span>
+</footer>
+
+<!-- ================= BARRA FLUTUANTE DO CARRINHO ================= -->
+<div class="barra-carrinho" id="barraCarrinho" hidden>
+  <span id="barraResumo">0 itens • R$ 0,00</span>
+  <button id="btnVerCarrinho">Ver carrinho</button>
+</div>
+
+<!-- ================= OVERLAY: CARRINHO ================= -->
+<div class="overlay" id="ovCarrinho" hidden>
+  <div class="sheet">
+    <div class="sheet-topo">
+      <h2>🛒 Seu carrinho</h2>
+      <button class="fechar" data-fechar="ovCarrinho">✕</button>
+    </div>
+    <div class="sheet-corpo" id="corpoCarrinho"></div>
+    <div class="sheet-pe">
+      <div class="total">Total: <strong id="totalCarrinho">R$ 0,00</strong></div>
+      <button class="primario grande" id="btnFazerPedido">Fazer pedido</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= OVERLAY: DADOS DO PEDIDO ================= -->
+<div class="overlay" id="ovDados" hidden>
+  <div class="sheet">
+    <div class="sheet-topo">
+      <h2>📄 Dados do pedido</h2>
+      <button class="fechar" data-fechar="ovDados">✕</button>
+    </div>
+    <div class="sheet-corpo">
+      <label>Seu nome *
+        <input type="text" id="fNome" placeholder="Nome completo" autocomplete="name">
+      </label>
+      <label>WhatsApp / telefone *
+        <input type="tel" id="fTelefone" placeholder="(62) 90000-0000" autocomplete="tel">
+      </label>
+      <label>Data do evento
+        <input type="date" id="fData">
+      </label>
+      <label>CEP *
+        <input type="text" id="fCep" inputmode="numeric" maxlength="9" placeholder="00000-000" autocomplete="postal-code">
+      </label>
+      <p class="suave" id="statusCep" hidden></p>
+      <label>Rua / endereço *
+        <input type="text" id="fEndereco" placeholder="Rua, número ou ponto de referência" autocomplete="street-address">
+      </label>
+      <div class="grade-campos">
+        <label>Bairro
+          <input type="text" id="fBairro" placeholder="Bairro" autocomplete="address-level3">
+        </label>
+        <label>Cidade / UF
+          <input type="text" id="fCidade" placeholder="Cidade / UF">
+        </label>
+      </div>
+      <div class="frete-preview" id="fretePreview" hidden></div>
+      <label>Observações
+        <textarea id="fObs" rows="3" placeholder="Horário de retirada, entrega, detalhes..."></textarea>
+      </label>
+      <p class="suave" id="resumoDados"></p>
+    </div>
+    <div class="sheet-pe">
+      <button class="primario grande" id="btnEnviarPedido">✅ Enviar pedido ao administrador</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= OVERLAY: SENHA ADMIN (ACESSO DISCRETO) ================= -->
+<div class="overlay" id="ovSenha" hidden>
+  <div class="sheet sheet-pequeno">
+    <div class="sheet-topo">
+      <h2>🔒 Acesso restrito</h2>
+      <button class="fechar" data-fechar="ovSenha">✕</button>
+    </div>
+    <div class="sheet-corpo">
+      <label>Senha
+        <input type="password" id="fSenhaAdmin" inputmode="numeric" placeholder="••••••">
+      </label>
+      <p class="erro" id="erroSenha" hidden>Senha incorreta.</p>
+    </div>
+    <div class="sheet-pe">
+      <button class="primario grande" id="btnEntrarAdmin">Entrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= CELEBRAÇÃO ================= -->
+<div class="celebracao" id="celebracao" hidden>
+  <div class="celebra-emoji" id="celebraEmoji">🎉🥳🎉</div>
+  <h2 id="celebraTitulo">PEDIDO AUTORIZADO E RESERVADO!</h2>
+  <p id="celebraTexto"></p>
+  <button class="primario grande" id="btnCelebrar">Continuar</button>
+</div>
+
+<!-- ================= TOAST ================= -->
+<div class="toast" id="toast" hidden></div>
+
+<script src="js/catalogo-seed.js"></script>
+<script src="js/fotos-seed.js"></script>
+<script src="js/store.js"></script>
+<script src="js/sync.js"></script>
+<script src="js/pix.js"></script>
+<script src="js/qrcode.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
