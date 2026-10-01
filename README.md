@@ -19,6 +19,7 @@ Aplicativo (PWA) para **catálogo de locação, pedidos com homologação do adm
 | `img/` | Fotos dos itens + ícones do app |
 | `manifest.json` + `sw.js` | Deixam o app **instalável** e **offline** |
 | `COMO_PUBLICAR.txt` | Passo a passo para publicar no GitHub |
+| `SINCRONIZAR_NUVEM.txt` | Passo a passo da **ponte grátis** (Google Sheets) para celular e PC verem os mesmos pedidos |
 
 ## Como usar (resumo)
 
@@ -34,8 +35,29 @@ Aplicativo (PWA) para **catálogo de locação, pedidos com homologação do adm
 4. Cliente toca em *Já efetuei o pagamento* → você confirma em **Pedidos**.
 5. Aba **Itens**: cadastra, edita preço, estoque, **foto**, oculta ou exclui.
 6. Aba **Fotos**: envia as fotos dos itens (o app reduz o tamanho automaticamente).
-7. Aba **Ajustes**: senha, WhatsApp, chave PIX e textos.
+7. Aba **Ajustes**: senha, WhatsApp, chave PIX, **sincronização em nuvem** e textos.
 8. Aba **Backup**: exporta/importa tudo em um arquivo `.json`.
+
+Na aba **Pedidos** os filtros são: Pendentes, Todos, Aguardando, Aprovados,
+Pagos, Recusados e **✅ Concluídos** (pedidos já efetivados/entregues, com a
+data da efetivação no cartão).
+
+## Sincronizar celular x computador (nuvem)
+
+Sem uma ponte, cada aparelho guarda os dados no próprio navegador: o pedido
+feito no celular só aparece no painel aberto naquele celular.
+
+Para os dois conversarem, configure a ponte gratuita do Google (planilha +
+Apps Script) seguindo o arquivo **`SINCRONIZAR_NUVEM.txt`** — dá 5 minutos e
+não precisa de cartão.
+
+- Painel → **Ajustes → 🔄 Sincronização**: cole o endereço da ponte, marque
+  *automático* e clique em **🔌 Testar conexão**.
+- Repita o mesmo endereço no outro aparelho (abra `admin.html` no celular e
+  entre com a senha).
+- Depois disso: pedido enviado no celular aparece no PC em até 30 s (ou na
+  hora com **🔄 Sincronizar agora**). Ajustes de preço/item/também se propagam.
+- Sem ponte configurada, o app continua funcionando exatamente como antes.
 
 ## Entrega, CEP e frete
 
@@ -72,6 +94,7 @@ Aplicativo (PWA) para **catálogo de locação, pedidos com homologação do adm
   o PC guarda os dados dele. Abas do mesmo navegador sincronizam em tempo real; navegadores/aparelhos
   diferentes (Chrome × Edge, celular × PC) **não** compartilham dados.
 - Senha padrão: **A103114** (alterável em *Ajustes*). Ela protege a tela, mas **não é criptografia** — quem tiver acesso físico ao aparelho com os dados salvos pode ler os pedidos.
+- Com a **ponte em nuvem** ligada, os dados passam a ficar também na **sua própria planilha do Google** (conta Google que você escolher). Ninguém mais tem acesso a ela, a não ser quem tiver sua conta.
 - Por isso: use o **Backup** (aba 💾) com frequência, guardando o arquivo `.json` no computador ou na nuvem.
 
 ## Testado
