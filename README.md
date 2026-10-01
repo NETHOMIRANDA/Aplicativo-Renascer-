@@ -37,6 +37,17 @@ Aplicativo (PWA) para **catálogo de locação, pedidos com homologação do adm
 7. Aba **Ajustes**: senha, WhatsApp, chave PIX e textos.
 8. Aba **Backup**: exporta/importa tudo em um arquivo `.json`.
 
+## Entrega, CEP e frete
+
+- No pedido o cliente digita o **CEP**: o app consulta os Correios (ViaCEP), **recusa CEP inexistente** e
+  preenche sozinho **rua, bairro e cidade/UF**.
+- O frete é calculado na hora e entra no total (e no valor do QR Code PIX):
+  - **Ajustes → Entrega e frete**: *Frete padrão*, *Frete grátis acima de R$ X* e *Tabela por cidade*
+    (uma linha por cidade, no formato `GOIANIA/GO = 35`).
+  - Se a cidade do cliente casar com a linha da tabela, vale o valor da linha; senão, vale o frete padrão.
+  - Tudo zerado = não cobra frete.
+- O pedido guarda **CEP, rua, bairro, cidade/UF, itens, frete e total**, e tudo aparece no painel e no WhatsApp.
+
 ## Fotos
 
 - As **24 fotos antigas** estão em `img/` e já aparecem na galeria do painel (aba **Fotos**).
@@ -57,6 +68,9 @@ Aplicativo (PWA) para **catálogo de locação, pedidos com homologação do adm
 ## Segurança (importante)
 
 - Este app é **estático** (não tem servidor). Os dados ficam gravados **no aparelho** onde o app é usado.
+- **Isso significa:** pedido feito no **celular** só aparece no painel aberto **naquele mesmo celular**;
+  o PC guarda os dados dele. Abas do mesmo navegador sincronizam em tempo real; navegadores/aparelhos
+  diferentes (Chrome × Edge, celular × PC) **não** compartilham dados.
 - Senha padrão: **A103114** (alterável em *Ajustes*). Ela protege a tela, mas **não é criptografia** — quem tiver acesso físico ao aparelho com os dados salvos pode ler os pedidos.
 - Por isso: use o **Backup** (aba 💾) com frequência, guardando o arquivo `.json` no computador ou na nuvem.
 
