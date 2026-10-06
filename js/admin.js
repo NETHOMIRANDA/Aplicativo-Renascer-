@@ -1,4 +1,4 @@
-﻿/* =========================================================
+/* =========================================================
    admin.js - painel do administrador
    ========================================================= */
 (function () {
@@ -203,7 +203,8 @@
       }).join("") + "</ul>";
       var itensTotal = p.itensTotal != null ? Number(p.itensTotal) : Number(p.total) || 0;
       if (p.frete != null && Number(p.frete) > 0) {
-        h += "<span class='suave'>Itens " + moeda(itensTotal) + " + Frete " + moeda(Number(p.frete)) + "</span><br>";
+        var rotaInfo = " (rota: 74353-400 ➔ " + (cli.cep ? "CEP " + cli.cep : "cliente") + (p.freteDistanciaKm ? " • ~" + p.freteDistanciaKm + "km" : "") + ")";
+        h += "<span class='suave'>Itens " + moeda(itensTotal) + " + Frete " + moeda(Number(p.frete)) + rotaInfo + "</span><br>";
       }
       h += "<strong>Total: " + moeda(p.total) + "</strong>";
       if (p.cliente.obs) h += "<br>📝 " + esc(p.cliente.obs);
@@ -867,7 +868,8 @@
     $("cMsgAprovado").value = c.msgAprovado;
     $("cFretePadrao").value = c.fretePadrao || 0;
     $("cFreteGratis").value = c.freteGratisAcima || 0;
-    $("cFreteCepDestino").value = c.freteCepDestino || "";
+    if ($("cFreteKmValor")) $("cFreteKmValor").value = c.freteKmValor || 0;
+    $("cFreteCepDestino").value = c.freteCepOrigem || c.freteCepDestino || "74353400";
     $("cFreteCepTabela").value = c.freteCepTabela || "";
     $("cNuvemUrl").value = c.nuvemUrl || "";
     $("cNuvemAuto").checked = c.nuvemAuto !== false;
@@ -893,6 +895,7 @@
   }
 
   function salvarAjustes() {
+    var cepBase = $("cFreteCepDestino").value.replace(/\D/g, "").slice(0, 8) || "74353400";
     Store.salvarConfig({
       nomeLoja: $("cNomeLoja").value.trim() || "RENASCRE LOCACOES & EVENTOS",
       msgBoasVindas: $("cBoasVindas").value.trim(),
@@ -904,7 +907,9 @@
       msgAprovado: $("cMsgAprovado").value.trim() || "PEDIDO AUTORIZADO E RESERVADO!",
       fretePadrao: Math.max(0, Number(String($("cFretePadrao").value).replace(",", ".")) || 0),
       freteGratisAcima: Math.max(0, Number(String($("cFreteGratis").value).replace(",", ".")) || 0),
-      freteCepDestino: $("cFreteCepDestino").value.replace(/\D/g, "").slice(0, 8) || "74353400",
+      freteKmValor: $("cFreteKmValor") ? Math.max(0, Number(String($("cFreteKmValor").value).replace(",", ".")) || 0) : 0,
+      freteCepOrigem: cepBase,
+      freteCepDestino: cepBase,
       freteCepTabela: $("cFreteCepTabela").value.replace(/\r/g, "").trim(),
       nuvemUrl: $("cNuvemUrl").value.trim(),
       nuvemAuto: $("cNuvemAuto").checked

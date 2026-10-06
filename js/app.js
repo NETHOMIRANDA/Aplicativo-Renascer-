@@ -309,14 +309,35 @@
     return digitos.slice(0, de.length) === de;
   }
 
+  function estimarKmTrajetoria(origemDigitos, destinoDigitos) {
+    if (!destinoDigitos || destinoDigitos.length < 5) return null;
+    var pref = destinoDigitos.slice(0, 5);
+    if (pref === "74353") return 2; // Mesmo bairro da base (Forteville e adjacências)
+    var num = parseInt(pref, 10);
+    if (num >= 74350 && num <= 74399) return 5;
+    if (num >= 74200 && num <= 74349) return 10;
+    if (num >= 74000 && num <= 74199) return 14;
+    if (num >= 74700 && num <= 74899) return 18;
+    if (num >= 74400 && num <= 74699) return 22;
+    if (num >= 74900 && num <= 74999) return 18;
+    if (num >= 75380 && num <= 75399) return 25;
+    if (num >= 75250 && num <= 75259) return 32;
+    if (num >= 75370 && num <= 75379) return 35;
+    if (num >= 75000 && num <= 75199) return 70;
+    return null;
+  }
+
   function calcularFrete(itensTotal, cep) {
     var cfg = Store.config();
     var digitos = soDigitos(cep);
-    var destino = mascaraCep(soDigitos(cfg.freteCepDestino) || "74353400");
+    var cepOrigem = mascaraCep(soDigitos(cfg.freteCepOrigem || cfg.freteCepDestino) || "74353400");
+    var cepDestino = mascaraCep(digitos);
     var valor = Number(cfg.fretePadrao) || 0;
     var origem = valor > 0 ? "padrao" : "";
     var faixa = "";
+    var km = estimarKmTrajetoria("74353400", digitos);
 
+    // 1. Tabela por faixa de CEP configurada no painel (prioridade máxima)
     var linhas = String(cfg.freteCepTabela || "").split(/\r?\n/);
     for (var i = 0; i < linhas.length; i++) {
       var linha = linhas[i].trim();
@@ -341,10 +362,26 @@
       }
     }
 
+    // 2. Se não casou na tabela e há valor por km configurado
+    var kmValor = Number(cfg.freteKmValor) || 0;
+    if (origem !== "tabela" && kmValor > 0 && km) {
+      valor = Math.round(km * kmValor * 100) / 100;
+      origem = "km";
+    }
+
+    // 3. Frete grátis se atingir valor mínimo
     var gratis = Number(cfg.freteGratisAcima) || 0;
     if (gratis > 0 && itensTotal >= gratis) { valor = 0; origem = "gratis"; faixa = ""; }
     if (isNaN(valor) || valor < 0) valor = 0;
-    return { valor: valor, origem: origem, faixa: faixa, destino: destino };
+
+    return {
+      valor: valor,
+      origem: origem,
+      faixa: faixa,
+      origemCep: cepOrigem,
+      destinoCep: cepDestino,
+      distanciaKm: km
+    };
   }
 
   function cidadeUfAtual() {
@@ -356,19 +393,33 @@
     var el = $("fretePreview");
     if (!el) return;
     var t = totalCarrinho();
-    var f = calcularFrete(t.total, $("fCep").value);
+    var cepVal = $("fCep").value;
+    var digitos = soDigitos(cepVal);
 
-    if (f.valor > 0) {
-      el.innerHTML = "🚚 Frete até <strong>" + esc(f.destino) + "</strong>" +
-        (f.faixa ? " (faixa <strong>" + esc(f.faixa) + "</strong>)" : "") +
-        ": <strong>" + moeda(f.valor) + "</strong>" +
+    if (digitos.length < 8) {
+      el.hidden = true;
+      if ($("resumoDados")) {
+        $("resumoDados").textContent = t.qtd + (t.qtd === 1 ? " item • " : " itens • ") + moeda(t.total);
+      }
+      return;
+    }
+
+    var f = calcularFrete(t.total, cepVal);
+    var kmTexto = f.distanciaKm ? " (aprox. " + f.distanciaKm + " km)" : "";
+    var rotaLinha = "Trajetória: saída da base (<strong>" + esc(f.origemCep) + "</strong>) ➔ entrega em seu CEP (<strong>" + esc(f.destinoCep) + "</strong>)" + kmTexto;
+
+    if (f.origem === "gratis") {
+      el.innerHTML = "🚚 <strong>Frete Grátis</strong> neste pedido 🎉<br><span class='suave'>" + rotaLinha + "</span>";
+      el.hidden = false;
+    } else if (f.valor > 0) {
+      el.innerHTML = "🚚 " + rotaLinha + "<br>" +
+        "Valor do frete: <strong>" + moeda(f.valor) + "</strong>" +
+        (f.faixa ? " (faixa <em>" + esc(f.faixa) + "</em>)" : (f.origem === "km" ? " (cálculo por km)" : "")) +
         " • Total com frete: <strong>" + moeda(t.total + f.valor) + "</strong>";
       el.hidden = false;
-    } else if (f.origem === "gratis") {
-      el.innerHTML = "🚚 <strong>Frete grátis</strong> neste pedido 🎉";
-      el.hidden = false;
     } else {
-      el.hidden = true;
+      el.innerHTML = "🚚 " + rotaLinha + "<br><strong>Frete sem custo adicional</strong>";
+      el.hidden = false;
     }
 
     if ($("resumoDados")) {
@@ -533,6 +584,10 @@
       itens: itens,
       itensTotal: t.total,
       frete: frete.valor,
+      freteOrigemCep: frete.origemCep,
+      freteDestinoCep: mascaraCep(cep),
+      freteDistanciaKm: frete.distanciaKm,
+      freteOrigemTipo: frete.origem,
       total: t.total + frete.valor
     };
 
@@ -664,16 +719,22 @@
       var cli = p.cliente || {};
       var ender = [cli.endereco, cli.bairro].filter(Boolean).join(", ");
       var cidUf = [cli.cidade, cli.uf].filter(Boolean).join("/");
+      var baseCep = p.freteOrigemCep || "74353-400";
+      var cliCep = p.freteDestinoCep || (cli.cep ? "CEP " + cli.cep : "");
+
       if (cli.cep || ender || cidUf) {
-        linhas += "<div class='entrega'>📍 " +
-          esc([cli.cep ? "CEP " + cli.cep : "", ender, cidUf].filter(Boolean).join(" • ")) + "</div>";
+        linhas += "<div class='entrega'>📍 <strong>Trajetória de entrega:</strong> Saída da base (<strong>" + esc(baseCep) + "</strong>) ➔ " + esc(cliCep) +
+          (p.freteDistanciaKm ? " (~" + p.freteDistanciaKm + " km)" : "") +
+          (ender ? "<br>🏠 " + esc(ender) : "") +
+          (cidUf ? " • " + esc(cidUf) : "") +
+          "</div>";
       }
 
       var itensTot = p.itensTotal != null ? Number(p.itensTotal) : Number(p.total) || 0;
       var frete = Number(p.frete) || 0;
       if (frete > 0) {
         linhas += "<div class='total-linha suave'>Itens: " + moeda(itensTot) + "</div>";
-        linhas += "<div class='total-linha suave'>Frete: " + moeda(frete) + "</div>";
+        linhas += "<div class='total-linha suave'>Frete (rota " + esc(baseCep) + " ➔ " + esc(cli.cep || "cliente") + "): " + moeda(frete) + "</div>";
       } else if (p.itensTotal != null && frete === 0 && cidUf) {
         linhas += "<div class='total-linha suave'>Entrega: frete não cobrado</div>";
       }

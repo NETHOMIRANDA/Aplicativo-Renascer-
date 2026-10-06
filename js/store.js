@@ -24,7 +24,9 @@ var Store = (function () {
     fretePadrao: 0,
     freteGratisAcima: 0,
     freteCidades: "",
+    freteCepOrigem: "74353400",
     freteCepDestino: "74353400",
+    freteKmValor: 0,
     freteCepTabela: "",
     nuvemUrl: "",
     nuvemAuto: true
