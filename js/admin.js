@@ -168,12 +168,21 @@
     $("contPedidos").style.display = pendentes ? "" : "none";
 
     var el = $("listaPedidos");
+    var avisoNuvem = "";
+    try {
+      if (!Nuvem.status().ativa) {
+        avisoNuvem = '<div class="bloco aviso-nuvem">📡 <strong>Sincronização desativada.</strong> ' +
+          "Pedidos feitos em <strong>outros celulares/navegadores</strong> não aparecem aqui. " +
+          "Configure em <em>Ajustes → 🔄 Sincronização</em> (passo a passo no arquivo SINCRONIZAR_NUVEM.txt).</div>";
+      }
+    } catch (e) {}
+
     if (!lista.length) {
-      el.innerHTML = '<div class="bloco"><p class="suave">Nenhum pedido neste filtro. 🎉</p></div>';
+      el.innerHTML = avisoNuvem + '<div class="bloco"><p class="suave">Nenhum pedido neste filtro. 🎉</p></div>';
       return;
     }
 
-    el.innerHTML = lista.map(function (p) {
+    el.innerHTML = avisoNuvem + lista.map(function (p) {
       var h = "";
       h += '<div class="pedido-admin st-' + p.status + '" data-id="' + p.id + '">';
       h += '<div class="topo-pedido"><span class="numero">#' + p.numero + "</span>" +

@@ -165,20 +165,27 @@
     el.innerHTML = lista.map(function (i) {
       var qtd = carrinho[i.id] || 0;
       var foto = fotoUrl(i.foto) || imgPlaceholder();
+      var estoqueNum = Number(i.estoque) || 0;
+      var temNoCarrinho = qtd > 0;
       return '' +
-        '<article class="card" data-id="' + i.id + '">' +
+        '<article class="card' + (temNoCarrinho ? ' card-no-carrinho' : '') + '" data-id="' + i.id + '">' +
           '<div class="card-foto">' +
             '<img src="' + esc(foto) + '" alt="' + esc(i.nome) + '" loading="lazy" onerror="this.src=\'' + imgPlaceholder() + '\'">' +
+            (temNoCarrinho ? '<span class="card-qtd-badge">' + qtd + ' no carrinho</span>' : '') +
           "</div>" +
           '<div class="card-corpo">' +
             '<span class="cat">' + esc(i.categoria) + "</span>" +
             "<h3>" + esc(i.nome) + "</h3>" +
             '<div class="preco"><strong>' + moeda(i.preco) + "</strong> / " + esc(i.unidade || "unidade") + "</div>" +
-            '<div class="estoque">Disponível: ' + (Number(i.estoque) || 0) + "</div>" +
+            '<div class="estoque">' +
+              (estoqueNum > 0
+                ? '<span class="dot-estoque"></span> ' + (estoqueNum <= 5 ? 'Últimas ' + estoqueNum + ' un' : 'Estoque: ' + estoqueNum)
+                : '<span class="dot-esgotado"></span> Esgotado') +
+            '</div>' +
             '<div class="controle">' +
-              '<button class="menos" data-act="menos" aria-label="Diminuir">−</button>' +
+              '<button class="menos" data-act="menos" aria-label="Diminuir"' + (qtd === 0 ? ' disabled' : '') + '>−</button>' +
               '<span class="qtd">' + qtd + "</span>" +
-              '<button class="mais" data-act="mais" aria-label="Aumentar">+</button>' +
+              '<button class="mais" data-act="mais" aria-label="Aumentar"' + (estoqueNum <= qtd ? ' disabled' : '') + '>+</button>' +
             "</div>" +
           "</div>" +
         "</article>";
@@ -595,6 +602,40 @@
     return { icone: base.icone === "sendo" ? "⏳" : base.icone, titulo: base.titulo, texto: texto };
   }
 
+  function gerarStepper(st) {
+    if (st === "recusado") return "";
+    var etapas = [
+      { rotulo: "Enviado" },
+      { rotulo: "Análise" },
+      { rotulo: "Aprovado" },
+      { rotulo: "Pagamento" },
+      { rotulo: "Pronto" }
+    ];
+    var nivel = 1;
+    if (st === "aguardando") nivel = 2;
+    else if (st === "aprovado") nivel = 3;
+    else if (st === "pago_enviado") nivel = 4;
+    else if (st === "pago_confirmado") nivel = 4.5;
+    else if (st === "concluido") nivel = 5;
+
+    return '<div class="status-stepper">' +
+      etapas.map(function (e, idx) {
+        var num = idx + 1;
+        var classe = "";
+        var icone = num;
+        if (num < Math.floor(nivel)) { classe = "completo"; icone = "✓"; }
+        else if (num === Math.floor(nivel)) {
+          if (nivel === 4.5 && num === 4) { classe = "completo"; icone = "✓"; }
+          else { classe = "atual"; }
+        }
+        return '<div class="step-item ' + classe + '">' +
+          '<span class="step-dot">' + icone + '</span>' +
+          '<span class="step-rotulo">' + e.rotulo + '</span>' +
+        '</div>';
+      }).join("") +
+    '</div>';
+  }
+
   function renderStatus() {
     var caixa = $("statusPedido");
     var lista = meusPedidos();
@@ -613,6 +654,7 @@
         '<span class="status-hora">' + dataBR(p.criadoEm) + "</span>" +
         "</div>";
       linhas += '<p class="status-texto">' + esc(info.texto) + "</p>";
+      linhas += gerarStepper(p.status);
 
       var itensHtml = (p.itens || []).map(function (i) {
         return "<li>" + i.qtd + "× " + esc(i.nome) + " <span class='suave'>(" + moeda(i.preco) + ")</span></li>";

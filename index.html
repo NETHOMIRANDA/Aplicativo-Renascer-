@@ -11,17 +11,20 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
 
 <!-- ================= CABEÇALHO ================= -->
 <header class="topo">
-  <div class="marca" id="marcaLogo" title="">
-    <img src="img/icon-192.png" alt="" class="marca-logo">
+  <div class="marca" id="marcaLogo" title="Toque 3 vezes para acesso admin">
+    <img src="img/icon-192.png" alt="Logo Renascer" class="marca-logo">
     <div class="marca-texto">
       <strong id="marcaNome">RENASCRE</strong>
-      <span id="marcaSub" hidden>Locações &amp; Eventos</span>
+      <span id="marcaSub">Locações &amp; Eventos</span>
     </div>
   </div>
   <button class="btn-carrinho" id="btnCarrinho" aria-label="Abrir carrinho">
@@ -31,13 +34,22 @@
 
 <!-- ================= HERO ================= -->
 <section class="hero">
+  <div class="hero-pill">✨ Catálogo de Locações &amp; Eventos</div>
   <h1>Monte seu evento</h1>
   <p id="msgBoasVindas">Escolha os itens, envie o pedido e aguarde nossa homologação.</p>
+  <div class="hero-beneficios">
+    <span class="hero-beneficio-item">⚡ Orçamento Imediato</span>
+    <span class="hero-beneficio-item">🚚 Entrega no Local</span>
+    <span class="hero-beneficio-item">💳 Pagamento via PIX</span>
+  </div>
 </section>
 
 <!-- ================= BUSCA / CATEGORIAS ================= -->
 <div class="filtros">
-  <input type="search" id="busca" class="busca" placeholder="🔍 Buscar item...">
+  <div class="busca-container">
+    <span class="busca-icone">🔍</span>
+    <input type="search" id="busca" class="busca" placeholder="Buscar mesas, cadeiras, toalhas, freezer...">
+  </div>
   <div class="chips" id="chips"></div>
 </div>
 
@@ -57,11 +69,11 @@
   <section class="painel sobre">
     <h3>Como funciona</h3>
     <ol class="passos">
-      <li>Escolha os itens e informe as quantidades.</li>
-      <li>Envie o pedido com seus dados.</li>
-      <li>Aguarda a <strong>homologação</strong> do administrador.</li>
+      <li>Escolha os itens e informe as quantidades desejadas.</li>
+      <li>Envie o pedido com seus dados e endereço de entrega.</li>
+      <li>Aguarde a <strong>homologação rápida</strong> do administrador.</li>
       <li>Receba a confirmação 🔊🎉 e faça o <strong>pagamento PIX</strong>.</li>
-      <li>Retire ou receba os itens na data combinada.</li>
+      <li>Retire ou receba os materiais na data combinada.</li>
     </ol>
   </section>
 </main>
@@ -70,18 +82,19 @@
 <footer class="rodape">
   <p id="rodapeContato">WhatsApp: (62) 98224-0434</p>
   <p class="suave" id="rodapeNome">RENASCRE Locações &amp; Eventos</p>
-  <span class="ponto-secreto" id="pontoSecreto" title="">•</span>
+  <span class="ponto-secreto" id="pontoSecreto" title="Acesso do administrador">•</span>
 </footer>
 
 <!-- ================= BARRA FLUTUANTE DO CARRINHO ================= -->
 <div class="barra-carrinho" id="barraCarrinho" hidden>
   <span id="barraResumo">0 itens • R$ 0,00</span>
-  <button id="btnVerCarrinho">Ver carrinho</button>
+  <button id="btnVerCarrinho">Ver carrinho →</button>
 </div>
 
 <!-- ================= OVERLAY: CARRINHO ================= -->
 <div class="overlay" id="ovCarrinho" hidden>
   <div class="sheet">
+    <div class="sheet-handle"></div>
     <div class="sheet-topo">
       <h2>🛒 Seu carrinho</h2>
       <button class="fechar" data-fechar="ovCarrinho">✕</button>
@@ -97,6 +110,7 @@
 <!-- ================= OVERLAY: DADOS DO PEDIDO ================= -->
 <div class="overlay" id="ovDados" hidden>
   <div class="sheet">
+    <div class="sheet-handle"></div>
     <div class="sheet-topo">
       <h2>📄 Dados do pedido</h2>
       <button class="fechar" data-fechar="ovDados">✕</button>
@@ -141,6 +155,7 @@
 <!-- ================= OVERLAY: SENHA ADMIN (ACESSO DISCRETO) ================= -->
 <div class="overlay" id="ovSenha" hidden>
   <div class="sheet sheet-pequeno">
+    <div class="sheet-handle"></div>
     <div class="sheet-topo">
       <h2>🔒 Acesso restrito</h2>
       <button class="fechar" data-fechar="ovSenha">✕</button>
