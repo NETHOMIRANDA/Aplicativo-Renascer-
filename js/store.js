@@ -305,7 +305,22 @@ var Store = (function () {
   }
 
   /* ---------- FOTOS ---------- */
-  function fotos() { return ler().fotos.slice(); }
+  function fotos() {
+    var d = ler();
+    var seed = (typeof FOTOS_SEED !== "undefined" && FOTOS_SEED && FOTOS_SEED.fotos) ? FOTOS_SEED.fotos : [];
+    var mudou = false;
+    /* primeira carga: marca tudo que já existe no seed (fotos apagadas pelo admin não voltam) */
+    if (!d.fotosSeedVista) { d.fotosSeedVista = seed.slice(); mudou = true; }
+    /* anexa apenas fotos NOVAS publicadas no seed depois desta marcação */
+    seed.forEach(function (f) {
+      if (d.fotosSeedVista.indexOf(f) !== -1) return;
+      d.fotosSeedVista.push(f);
+      mudou = true;
+      if (d.fotos.indexOf(f) === -1) d.fotos.push(f);
+    });
+    if (mudou) salvar();
+    return d.fotos.slice();
+  }
 
   function addFoto(nome) {
     var d = ler();
@@ -371,7 +386,17 @@ var Store = (function () {
           return;
         }
         if (idx === -1) { d[grupo].push(rem); mudou = true; return; }
-        if (tsRem > String(d[grupo][idx].atualizadoEm || "")) { d[grupo][idx] = rem; mudou = true; }
+        if (tsRem > String(d[grupo][idx].atualizadoEm || "")) {
+          /* a nuvem nunca envia foto colada (manda ""): preserva a foto local */
+          if (rem.foto === "" && d[grupo][idx] && d[grupo][idx].foto) {
+            var clone = {};
+            for (var k in rem) if (Object.prototype.hasOwnProperty.call(rem, k)) clone[k] = rem[k];
+            clone.foto = d[grupo][idx].foto;
+            rem = clone;
+          }
+          d[grupo][idx] = rem;
+          mudou = true;
+        }
       });
     }
     mesclar("pedidos", estado.pedidos);

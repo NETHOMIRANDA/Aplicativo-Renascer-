@@ -14,6 +14,7 @@ $action = {
     $changeType = $Event.SourceEventArgs.ChangeType
     
     if ($path -like "*\.git\*") { return }
+    if ($path -like "*fotos-novas*") { return }
 
     Write-Host "Detectado: $changeType em $path" -ForegroundColor Yellow
     
