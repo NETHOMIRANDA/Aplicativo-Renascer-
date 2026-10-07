@@ -6,7 +6,7 @@ var RENASCER_CONFIG = {
   /* Endereço da ponte (Google Apps Script) que recebe os pedidos.
      Cole aqui o endereço terminado em /exec  (veja SINCRONIZAR_NUVEM.txt).
      Sem esse endereço os pedidos ficam só no celular de quem os fez. */
-  nuvemUrl: "",
+  nuvemUrl: "https://script.google.com/macros/s/AKfycbwN3kb3wFZyiV7FCqdzq1zws2AKxF-6rtjb3WQf20U9xAJGLRTuISxLUcy5Z-_NBf04DQ/exec",
 
   /* Ponto de partida do frete: CEP 74353-400 (Rua Presidente Rodrigues Alves,
      Jardim Presidente, Goiânia/GO). Coordenadas usadas só como ponto de referência. */
