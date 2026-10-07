@@ -6,9 +6,12 @@ var Store = (function () {
 
   var KEY = "renascer.dados.v1";
   var ALERT_KEY = "renascer.alertas.v1";
+  var MEUS_KEY = "renascer.meuspedidos.v1";
   var cache = null;
   var ouvintes = [];
   var versao = 0;
+
+  var FIXA = (typeof RENASCER_CONFIG !== "undefined" && RENASCER_CONFIG) ? RENASCER_CONFIG : {};
 
   var CONFIG_PADRAO = {
     senhaAdmin: "A103114",
@@ -26,9 +29,10 @@ var Store = (function () {
     freteCidades: "",
     freteCepOrigem: "74353400",
     freteCepDestino: "74353400",
-    freteKmValor: 0,
+    freteKmValor: Number(FIXA.freteKmValorPadrao) || 0,
+    freteKmDefinido: false,
     freteCepTabela: "",
-    nuvemUrl: "",
+    nuvemUrl: FIXA.nuvemUrl || "",
     nuvemAuto: true
   };
 
@@ -201,8 +205,38 @@ var Store = (function () {
     };
     d.proximoNumero = (d.proximoNumero || 1) + 1;
     d.pedidos.push(p);
+    registrarMeuPedido(p.id);
     salvar();
     return p;
+  }
+
+  /* Pedidos feitos NESTE aparelho (cada cliente só enxerga os próprios pedidos) */
+  function meusIds() {
+    try {
+      var raw = localStorage.getItem(MEUS_KEY);
+      if (raw === null) {
+        /* aparelhos que já tinham pedidos antes desta versão: todos eram deste aparelho */
+        var ini = ler().pedidos.map(function (p) { return p.id; });
+        localStorage.setItem(MEUS_KEY, JSON.stringify(ini));
+        return ini;
+      }
+      return JSON.parse(raw) || [];
+    } catch (e) { return []; }
+  }
+
+  function registrarMeuPedido(id) {
+    var l = meusIds();
+    if (l.indexOf(id) === -1) {
+      l.push(id);
+      try { localStorage.setItem(MEUS_KEY, JSON.stringify(l)); } catch (e) {}
+    }
+  }
+
+  /* guarda a senha digitada (já validada na nuvem) sem alterar a data das configurações */
+  function definirSenhaLocal(senha) {
+    var d = ler();
+    d.config.senhaAdmin = senha;
+    gravarInterno(d);
   }
 
   function atualizarPedido(id, patch) {
@@ -246,6 +280,11 @@ var Store = (function () {
     var out = {};
     for (var k in CONFIG_PADRAO) out[k] = CONFIG_PADRAO[k];
     for (var k2 in c) out[k2] = c[k2];
+    /* endereço da ponte fixo no config.js vale para todos os aparelhos */
+    if (!out.nuvemUrl && FIXA.nuvemUrl) out.nuvemUrl = FIXA.nuvemUrl;
+    if (FIXA.nuvemUrl && String(out.nuvemUrl).trim() === "") out.nuvemUrl = FIXA.nuvemUrl;
+    /* valor por km: enquanto o administrador não definir um, usa o padrão */
+    if (!out.freteKmDefinido && !Number(out.freteKmValor)) out.freteKmValor = CONFIG_PADRAO.freteKmValor;
     return out;
   }
 
@@ -346,9 +385,11 @@ var Store = (function () {
     /* 4) configurações (nome, frete, PIX, senha...) */
     if (estado.config && estado.configAtualizadoEm) {
       if (String(estado.configAtualizadoEm) > String(d.configAtualizadoEm || "")) {
+        var senhaAnterior = d.config && d.config.senhaAdmin;
         d.config = estado.config;
         d.configAtualizadoEm = String(estado.configAtualizadoEm);
-        if (!d.config.senhaAdmin) d.config.senhaAdmin = CONFIG_PADRAO.senhaAdmin;
+        /* a nuvem não envia a senha aos clientes: mantém a que já existe neste aparelho */
+        if (!d.config.senhaAdmin) d.config.senhaAdmin = senhaAnterior || CONFIG_PADRAO.senhaAdmin;
         mudou = true;
       }
     }
@@ -397,6 +438,8 @@ var Store = (function () {
     pedidos: pedidos,
     pedido: pedido,
     novoPedido: novoPedido,
+    meusIds: meusIds,
+    definirSenhaLocal: definirSenhaLocal,
     atualizarPedido: atualizarPedido,
     excluirPedido: excluirPedido,
     statusAlertado: statusAlertado,

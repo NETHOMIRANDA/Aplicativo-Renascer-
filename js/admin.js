@@ -908,6 +908,7 @@
       fretePadrao: Math.max(0, Number(String($("cFretePadrao").value).replace(",", ".")) || 0),
       freteGratisAcima: Math.max(0, Number(String($("cFreteGratis").value).replace(",", ".")) || 0),
       freteKmValor: $("cFreteKmValor") ? Math.max(0, Number(String($("cFreteKmValor").value).replace(",", ".")) || 0) : 0,
+      freteKmDefinido: true,
       freteCepOrigem: cepBase,
       freteCepDestino: cepBase,
       freteCepTabela: $("cFreteCepTabela").value.replace(/\r/g, "").trim(),
@@ -993,6 +994,18 @@
   function ligarEventos() {
     $("btnLogin").addEventListener("click", function () {
       var cfg = Store.config();
+      var digitada = $("senhaLogin").value.trim();
+      if (digitada && digitada !== cfg.senhaAdmin && typeof Nuvem !== "undefined" && Nuvem.recarregar() && !window.__loginNuvem) {
+        /* aparelho novo ou senha trocada em outro aparelho: confere na nuvem */
+        Nuvem.verificarSenha(digitada, function (ok) {
+          if (ok) { Store.definirSenhaLocal(digitada); }
+          window.__loginNuvem = true;
+          $("btnLogin").click();
+          window.__loginNuvem = false;
+        });
+        return;
+      }
+      cfg = Store.config();
       if ($("senhaLogin").value.trim() === cfg.senhaAdmin) {
         entrar($("manterConectado").checked);
         toast("Bem-vindo! 👋");

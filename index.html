@@ -141,6 +141,14 @@
         </label>
       </div>
       <div class="frete-preview" id="fretePreview" hidden></div>
+      <div class="grade-campos">
+        <label>Distância até você (km)
+          <input type="text" id="fKm" readonly placeholder="calculada pelo CEP">
+        </label>
+        <label>Frete (R$)
+          <input type="text" id="fFrete" readonly placeholder="calculado pelo CEP">
+        </label>
+      </div>
       <label>Observações
         <textarea id="fObs" rows="3" placeholder="Horário de retirada, entrega, detalhes..."></textarea>
       </label>
@@ -185,6 +193,7 @@
 
 <script src="js/catalogo-seed.js"></script>
 <script src="js/fotos-seed.js"></script>
+<script src="js/config.js"></script>
 <script src="js/store.js"></script>
 <script src="js/sync.js"></script>
 <script src="js/pix.js"></script>

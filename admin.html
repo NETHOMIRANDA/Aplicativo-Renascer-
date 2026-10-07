@@ -204,7 +204,7 @@
           <textarea id="cFreteCepTabela" rows="6" placeholder="74353 = 15&#10;74350-74399 = 25&#10;74000-74999 = 40"></textarea>
         </label>
         <p class="suave">A cobrança de frete é calculada a contar do <strong>início da trajetória no CEP de origem 74353-400</strong> até o CEP de entrega incluso para o cliente.
-        Se preenchido o <em>valor por km</em>, o app estima a distância em km a partir de 74353-400. Se a cidade/bairro casar na <em>tabela por faixa</em>, prevalece o valor da linha. Se nenhuma regra casar, vale o frete padrão. Deixe tudo zerado para não cobrar frete.</p>
+        Se preenchido o <em>valor por km</em>, o app calcula a <strong>distância real pela rota</strong> (ruas) de 74353-400 até o CEP do cliente e multiplica pelo valor por km (padrão R$ 4,40). Se a cidade/bairro casar na <em>tabela por faixa</em>, prevalece o valor da linha. Se nenhuma regra casar, vale o frete padrão. Deixe tudo zerado para não cobrar frete.</p>
       </div>
 
       <div class="bloco">
@@ -288,6 +288,7 @@
 
 <script src="js/catalogo-seed.js"></script>
 <script src="js/fotos-seed.js"></script>
+<script src="js/config.js"></script>
 <script src="js/store.js"></script>
 <script src="js/sync.js"></script>
 <script src="js/pix.js"></script>

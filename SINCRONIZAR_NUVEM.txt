@@ -1,128 +1,95 @@
 ================================================================
-  SINCRONIZAÇÃO EM NUVEM — celular x computador (grátis)
+  PONTE EM NUVEM — pedidos dos clientes chegam até você (grátis)
   RENASCRE Locações & Eventos
 ================================================================
 
-POR QUE ISSO EXISTE
---------------------
-O aplicativo é estático: cada aparelho guarda os dados no próprio
-navegador. Sem uma "ponte", o pedido feito no celular não aparece no
-painel do computador.
+POR QUE ISSO É NECESSÁRIO
+-------------------------
+O aplicativo é estático (GitHub Pages): sem servidor, cada celular guarda
+os dados só no próprio navegador. Por isso o pedido que um cliente faz
+NÃO chegava até o seu painel.
 
-Esta ponte é uma planilha do Google Sheets + um script do Google
-(Apps Script). É gratuita, não tem prazo e não precisa de cartão.
+A "ponte" é uma planilha do Google + um script do Google (Apps Script).
+É gratuita, sem prazo e sem cartão. Você faz UMA vez (uns 5 minutos) e
+o endereço da ponte fica FIXO no aplicativo (arquivo js/config.js), então
+todos os celulares dos clientes já enviam os pedidos para você sozinhos.
 
-Tempo de configuração: uns 5 minutos, uma única vez.
+O que a ponte garante:
+- O pedido do cliente chega até você na hora (e o painel atualiza a cada 30 s).
+- Cada cliente enxerga SOMENTE os próprios pedidos.
+- O cliente não consegue se auto-aprovar nem mudar preços/itens/ajustes.
+- A senha do administrador nunca é enviada aos clientes.
+- Dois pedidos feitos ao mesmo tempo não se sobrescrevem.
 
 
-PARTE 1 — CRIAR A PONTE (no computador, no navegador)
------------------------------------------------------
-1. Abra https://sheets.new  (faça login na sua conta Google).
-2. Dê um nome qualquer à planilha, por exemplo: RENASCRE-SINCRONIZACAO
-3. No menu superior, clique em  Extensões > Apps Script.
+PARTE 1 — CRIAR A PONTE (no computador)
+---------------------------------------
+1. Abra https://sheets.new  (entre na sua conta Google).
+2. Dê um nome à planilha, por exemplo: RENASCER-PONTE
+3. Menu  Extensões > Apps Script.
 4. Apague TUDO que estiver na aba de código (Ctrl+A, Delete).
-5. Cole o código que está no bloco "CÓDIGO" abaixo (Ctrl+V).
-6. Clique no ícone de disquete (Salvar) ou Ctrl+S.
-7. Clique em  Implementar > Nova implementação.
-8. Em "Tipo", escolha  Aplicativo da Web  (Web app).
-9. Configure:
-      Executar como:  Minha conta (e-mail seu)
+5. Abra o arquivo  ponte-apps-script.gs  (está na raiz deste projeto),
+   copie TODO o conteúdo e cole no Apps Script (Ctrl+V). Salve (Ctrl+S).
+6. Clique em  Implementar > Nova implementação.
+7. Em "Tipo" escolha  Aplicativo da Web.
+8. Configure:
+      Executar como:   Eu (seu e-mail)
       Quem tem acesso: Qualquer pessoa
-10. Clique em  Implementar  e COPIE o endereço que aparece
-    (começa com https://script.google.com/macros/s/.../exec).
-11. Clique em  Concluído  e pode fechar a aba do Apps Script.
+9. Clique em  Implementar, autorize o acesso quando o Google pedir
+   ("Avançado" > "Acessar ... (não seguro)" > Permitir) e COPIE o
+   endereço que termina em  /exec.
+
+JÁ TINHA UMA PONTE ANTIGA? Não crie outra: abra o Apps Script dela,
+cole o código novo no lugar do antigo e use
+  Implementar > Gerenciar implementações > (lápis) > Versão: "Nova versão" > Implementar.
+O endereço /exec continua o mesmo.
 
 
-PARTE 2 — COLAR O ENDEREÇO NO PAINEL
--------------------------------------
-1. Abra o painel do administrador (admin.html) > aba  ⚙️ Ajustes.
-2. Role até  🔄 Sincronização (celular ↔ computador).
-3. Cole o endereço copiado no campo  "Endereço da ponte".
-4. Mantenha marcado  "Sincronizar automaticamente".
-5. Clique em  🔌 Testar conexão  → deve aparecer
-   "Conectado! Dados encontrados na planilha."
-6. Clique em  💾 Salvar ajustes  no final da aba.
+PARTE 2 — COLOCAR O ENDEREÇO NO APLICATIVO (uma única vez)
+-----------------------------------------------------------
+1. Abra o arquivo  js/config.js  e cole o endereço entre as aspas:
+      nuvemUrl: "https://script.google.com/macros/s/XXXXXXXX/exec",
+2. Envie a alteração para o GitHub (commit + push). Em ~1 minuto o
+   GitHub Pages publica e TODOS os celulares passam a usar a ponte.
+3. Abra o painel (admin.html), entre com a senha, vá em  Ajustes >
+   Sincronização > Testar conexão  → deve aparecer "Conectado!".
+4. Salve os ajustes. Pronto.
+
+No celular do cliente NÃO precisa configurar nada.
+Se os celulares ainda mostram a versão antiga, feche e abra o app
+(ou limpe os dados do site) para baixar a versão nova.
 
 
-PARTE 3 — NO CELULAR
+COMO FICA O DIA A DIA
 ---------------------
-1. Abra o aplicativo do cliente e vá em  ⚙️ (ou o menu) > Ajustes
-   do administrador  (mesmo caminho de sempre, senha A103114).
-   OBS.: se o seu app do cliente não tem a tela de ajustes, basta
-   abrir admin.html no navegador do celular e entrar com a senha.
-2. Cole o MESMO endereço da ponte em  🔄 Sincronização  e salve.
-3. Pronto: pedido enviado no celular passa a aparecer no
-   computador em até 30 segundos (ou na hora, com
-   "🔄 Sincronizar agora").
+- Cliente envia o pedido → o app mostra "recebido pelo administrador ✅"
+  (se a ponte falhar, ele avisa e oferece o botão "Avisar no WhatsApp").
+- Você abre o painel → aba Pedidos → aprova ou recusa.
+- O cliente vê a aprovação e o QR Code PIX em até 30 segundos.
 
 
-COMO FUNCIONA
--------------
-- Os dois aparelhos leem a planilha a cada 30 segundos.
-- Sempre que um deles manda dados, ele PRIMEIRO baixa o que existe
-  na planilha, mescla (vale a alteração mais recente) e só então
-  envia de volta. Assim nada se perde.
-- Itens apagados também são propagados (exclusão confirmada).
-- As fotos ENVIADAS POR VOCÊ no painel não sobem para a nuvem
-  (peso demais); só as fotos dos itens que já vêm no catálogo.
-- Se a nuvem estiver desativada, o app continua funcionando
-  exatamente como antes, só que por aparelho.
+FRETE
+-----
+O frete é calculado pela DISTÂNCIA REAL por rota (ruas) entre o CEP-base
+74353-400 e o CEP do cliente, multiplicada pelo "Valor por km" definido em
+Ajustes > Entrega e frete (padrão R$ 4,40/km). A tela do cliente mostra os
+campos "Distância até você (km)" e "Frete (R$)".
+
+
+SEGURANÇA
+---------
+- TROQUE a senha padrão em Ajustes. Depois de trocada, só a nova vale na ponte.
+- Quem tiver o endereço /exec consegue enviar pedidos, mas não consegue ver
+  pedidos de outros clientes nem alterar o catálogo.
 
 
 SOLUÇÃO DE PROBLEMAS
 --------------------
-"erro: Not Found"          → o endereço não é de implementação do
-                             tipo "Aplicativo da Web". Refaça a
-                             Parte 1, item 7-10.
-"erro: A configuração de acesso..." → em "Quem tem acesso" escolha
-                             "Qualquer pessoa" e implemente de novo
-                             (gere uma NOVA implementação).
-"Sem internet"             → a ponte precisa de rede nos dois lados.
-Nada aparece no outro       → clique em "🔄 Sincronizar agora" nos
-                             dois lados e confira se os dois usam o
-                             MESMO endereço.
-
-
-================================================================
-  CÓDIGO  (cole isto no Apps Script)
-================================================================
-
-function doGet(e) {
-  var acao = (e && e.parameter && e.parameter.acao) || "";
-  if (acao === "estado") return json({ estado: lerEstado() });
-  return json({ estado: lerEstado() });
-}
-
-function doPost(e) {
-  var dados = JSON.parse(e.postData.contents);
-  if (dados && dados.acao === "salvar" && dados.estado) {
-    gravarEstado(dados.estado);
-  }
-  return json({ estado: lerEstado() });
-}
-
-function json(obj) {
-  return ContentService
-    .createTextOutput(JSON.stringify(obj))
-    .setMimeType(ContentService.MimeType.JSON);
-}
-
-/* --- armazenamento: uma única célula com o JSON completo --- */
-var ABA = "estado";
-
-function planilha() {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var ab = ss.getSheetByName(ABA);
-  if (!ab) ab = ss.insertSheet(ABA);
-  return ab;
-}
-
-function lerEstado() {
-  var v = planilha().getRange("A1").getValue();
-  if (!v) return {};
-  try { return JSON.parse(v); } catch (err) { return {}; }
-}
-
-function gravarEstado(estado) {
-  planilha().getRange("A1").setValue(JSON.stringify(estado));
-}
+"erro: Not Found"           → o endereço não é de implementação do tipo
+                              "Aplicativo da Web". Refaça a Parte 1.
+"Falha de acesso/permissão" → em "Quem tem acesso" escolha "Qualquer pessoa"
+                              e gere uma NOVA implementação.
+Pedido não chega            → confira se o endereço está em js/config.js,
+                              se foi publicado no GitHub e se o celular tem
+                              internet. O app tenta reenviar sozinho a cada 30 s.
+Mudei o código da ponte     → é preciso "Nova versão" em Gerenciar implementações.

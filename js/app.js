@@ -309,6 +309,99 @@
     return digitos.slice(0, de.length) === de;
   }
 
+  /* ---- distância REAL por rota, da base (CEP 74353-400) até o CEP do cliente ---- */
+  var FIXA_APP = (typeof RENASCER_CONFIG !== "undefined" && RENASCER_CONFIG) ? RENASCER_CONFIG : {};
+  var BASE_COORD = { lat: Number(FIXA_APP.baseLat) || -16.7457271, lon: Number(FIXA_APP.baseLon) || -49.3239588 };
+  var KM_CACHE_KEY = "renascer.kmcache.v2";
+  var kmEmCalculo = {};
+
+  function lerKmCache() {
+    try { return JSON.parse(localStorage.getItem(KM_CACHE_KEY)) || {}; } catch (e) { return {}; }
+  }
+  var kmCache = lerKmCache();
+
+  function gravarKmCache() {
+    try { localStorage.setItem(KM_CACHE_KEY, JSON.stringify(kmCache)); } catch (e) {}
+  }
+
+  function haversineKm(a, b) {
+    var R = 6371, rad = Math.PI / 180;
+    var dLat = (b.lat - a.lat) * rad, dLon = (b.lon - a.lon) * rad;
+    var x = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(a.lat * rad) * Math.cos(b.lat * rad) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    return 2 * R * Math.asin(Math.sqrt(x));
+  }
+
+  function consultaNominatim(params) {
+    return fetch("https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=br&accept-language=pt-BR&" + params)
+      .then(function (r) { return r.json(); })
+      .then(function (a) { return a && a[0] ? { lat: parseFloat(a[0].lat), lon: parseFloat(a[0].lon) } : null; })
+      .catch(function () { return null; });
+  }
+
+  /* Acha as coordenadas do endereço do CEP (rua > bairro > CEP). Sem achar, o frete usa a estimativa por região. */
+  function geocodificarEndereco(j, cep) {
+    var enc = encodeURIComponent;
+    var estado = j.estado || j.uf || "";
+    var tentativas = [];
+    if (j.logradouro && j.bairro) {
+      tentativas.push(function () {
+        return consultaNominatim("q=" + enc(j.logradouro + ", " + j.bairro + ", " + j.localidade + ", " + estado));
+      });
+    }
+    if (j.logradouro) {
+      tentativas.push(function () {
+        return consultaNominatim("street=" + enc(j.logradouro) + "&city=" + enc(j.localidade) + "&state=" + enc(estado));
+      });
+    }
+    if (j.bairro) {
+      tentativas.push(function () {
+        return consultaNominatim("q=" + enc(j.bairro + ", " + j.localidade + ", " + estado));
+      });
+    }
+    tentativas.push(function () { return consultaNominatim("postalcode=" + enc(mascaraCep(cep))); });
+    var i = 0;
+    function proxima() {
+      if (i >= tentativas.length) return Promise.resolve(null);
+      return tentativas[i++]().then(function (r) { return r || proxima(); });
+    }
+    return proxima();
+  }
+
+  function distanciaPorRota(dest) {
+    var url = "https://router.project-osrm.org/route/v1/driving/" +
+      BASE_COORD.lon + "," + BASE_COORD.lat + ";" + dest.lon + "," + dest.lat + "?overview=false";
+    return fetch(url)
+      .then(function (r) { return r.json(); })
+      .then(function (j) {
+        return j && j.code === "Ok" && j.routes && j.routes[0] ? j.routes[0].distance / 1000 : null;
+      })
+      .catch(function () { return null; });
+  }
+
+  function calcularKmDoCep(cep, j) {
+    if (kmCache[cep] || kmEmCalculo[cep]) return;
+    kmEmCalculo[cep] = true;
+    atualizarPreviewFrete();
+    geocodificarEndereco(j, cep).then(function (coord) {
+      if (!coord) return null;
+      return distanciaPorRota(coord).then(function (km) {
+        if (km != null) return { km: km, fonte: "rota" };
+        return { km: haversineKm(BASE_COORD, coord) * 1.3, fonte: "linha" };
+      });
+    }).then(function (r) {
+      delete kmEmCalculo[cep];
+      if (r) {
+        kmCache[cep] = { km: Math.max(0.1, Math.round(r.km * 10) / 10), fonte: r.fonte };
+        gravarKmCache();
+      }
+      atualizarPreviewFrete();
+    }).catch(function () {
+      delete kmEmCalculo[cep];
+      atualizarPreviewFrete();
+    });
+  }
+
   function estimarKmTrajetoria(origemDigitos, destinoDigitos) {
     if (!destinoDigitos || destinoDigitos.length < 5) return null;
     var pref = destinoDigitos.slice(0, 5);
@@ -335,7 +428,9 @@
     var valor = Number(cfg.fretePadrao) || 0;
     var origem = valor > 0 ? "padrao" : "";
     var faixa = "";
-    var km = estimarKmTrajetoria("74353400", digitos);
+    var kmInfo = kmCache[digitos];
+    var km = kmInfo ? kmInfo.km : estimarKmTrajetoria("74353400", digitos);
+    var kmFonte = kmInfo ? kmInfo.fonte : (km ? "estimado" : "");
 
     // 1. Tabela por faixa de CEP configurada no painel (prioridade máxima)
     var linhas = String(cfg.freteCepTabela || "").split(/\r?\n/);
@@ -380,13 +475,30 @@
       faixa: faixa,
       origemCep: cepOrigem,
       destinoCep: cepDestino,
-      distanciaKm: km
+      distanciaKm: km,
+      kmFonte: kmFonte
     };
   }
 
   function cidadeUfAtual() {
     var partes = String($("fCidade").value || "").trim().split("/");
     return { cidade: (partes[0] || "").trim(), uf: (partes[1] || "").trim() };
+  }
+
+  function atualizarCamposFrete(f, calculando) {
+    var kmEl = $("fKm"), frEl = $("fFrete");
+    if (!kmEl || !frEl) return;
+    if (!f) { kmEl.value = ""; frEl.value = ""; return; }
+    if (calculando) { kmEl.value = "calculando..."; frEl.value = "calculando..."; return; }
+    if (f.distanciaKm) {
+      kmEl.value = (f.kmFonte === "estimado" ? "~" : "") + String(f.distanciaKm).replace(".", ",") + " km" +
+        (f.kmFonte === "linha" ? " (aprox.)" : "");
+    } else {
+      kmEl.value = "não calculada";
+    }
+    if (f.origem === "gratis") frEl.value = "Grátis";
+    else if (f.valor > 0) frEl.value = moeda(f.valor);
+    else frEl.value = f.distanciaKm ? "A combinar" : "";
   }
 
   function atualizarPreviewFrete() {
@@ -398,6 +510,7 @@
 
     if (digitos.length < 8) {
       el.hidden = true;
+      atualizarCamposFrete(null);
       if ($("resumoDados")) {
         $("resumoDados").textContent = t.qtd + (t.qtd === 1 ? " item • " : " itens • ") + moeda(t.total);
       }
@@ -405,7 +518,10 @@
     }
 
     var f = calcularFrete(t.total, cepVal);
-    var kmTexto = f.distanciaKm ? " (aprox. " + f.distanciaKm + " km)" : "";
+    atualizarCamposFrete(f, !!kmEmCalculo[digitos]);
+    var kmTexto = f.distanciaKm
+      ? " (" + (f.kmFonte === "rota" ? "" : "aprox. ") + String(f.distanciaKm).replace(".", ",") + " km)"
+      : "";
     var rotaLinha = "Trajetória: saída da base (<strong>" + esc(f.origemCep) + "</strong>) ➔ entrega em seu CEP (<strong>" + esc(f.destinoCep) + "</strong>)" + kmTexto;
 
     if (f.origem === "gratis") {
@@ -461,6 +577,7 @@
           $("fCidade").value = cid;
           cepAuto.cidade = true;
         }
+        calcularKmDoCep(d, j);
         atualizarPreviewFrete();
       })
       .catch(function () {
@@ -470,7 +587,9 @@
 
   /* ---------------- pedidos ---------------- */
   function meusPedidos() {
-    return Store.pedidos();
+    /* cada cliente vê somente os pedidos feitos no próprio aparelho */
+    var meus = Store.meusIds();
+    return Store.pedidos().filter(function (p) { return meus.indexOf(p.id) !== -1; });
   }
 
   /* edicao de pedido enviado (somente enquanto aguarda homologacao) */
@@ -552,6 +671,8 @@
     var rua = $("fEndereco").value.trim();
     if (!rua) { toast("Informe a rua / endereço."); $("fEndereco").focus(); return; }
 
+    if (kmEmCalculo[cep]) { toast("Calculando o frete... aguarde um instante e envie de novo."); return; }
+
     var t = totalCarrinho();
     if (t.qtd === 0) { toast("Seu carrinho está vazio."); return; }
 
@@ -587,6 +708,7 @@
       freteOrigemCep: frete.origemCep,
       freteDestinoCep: mascaraCep(cep),
       freteDistanciaKm: frete.distanciaKm,
+      freteKmFonte: frete.kmFonte,
       freteOrigemTipo: frete.origem,
       total: t.total + frete.valor
     };
@@ -613,13 +735,35 @@
 
     tocarNeutro();
     toast(eraEdicao
-      ? "Pedido #" + numero + " atualizado ✅"
-      : "Pedido #" + numero + " enviado ao administrador ✅");
+      ? "Pedido #" + numero + " atualizado. Enviando ao administrador..."
+      : "Pedido #" + numero + " criado. Enviando ao administrador...");
+    enviarParaNuvem(numero, eraEdicao);
     setTimeout(function () {
       var el = $("painelPedido");
       if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
     }, 350);
     limparFormularioDados();
+  }
+
+  /* Envia o pedido à ponte na hora e confirma (ou avisa) se ele realmente chegou ao administrador */
+  function enviarParaNuvem(numero, eraEdicao) {
+    var aviso = "⚠️ Pedido #" + numero + " salvo, mas AINDA NÃO chegou ao administrador. " +
+      "Toque em “Avisar no WhatsApp” no seu pedido.";
+    if (typeof Nuvem === "undefined" || !Nuvem.recarregar()) { toast(aviso); return; }
+    Nuvem.sincronizarAgora(function (ok) {
+      if (ok) toast("Pedido #" + numero + (eraEdicao ? " atualizado" : " enviado") + " e recebido pelo administrador ✅");
+      else toast(aviso + " Vamos tentar de novo automaticamente.");
+    });
+  }
+
+  function linkZapPedido(p) {
+    var cfg = Store.config();
+    var cli = p.cliente || {};
+    var txt = "Olá! Fiz o pedido #" + p.numero + " no app da RENASCER.\n" +
+      "Cliente: " + (cli.nome || "") + "\n" +
+      (p.dataEvento ? "Data do evento: " + p.dataEvento + "\n" : "") +
+      "Total: " + moeda(p.total) + "\nPode homologar?";
+    return "https://wa.me/" + String(cfg.whatsapp).replace(/\D/g, "") + "?text=" + encodeURIComponent(txt);
   }
 
   function limparFormularioDados() {
@@ -635,6 +779,7 @@
     cepAuto = { endereco: false, bairro: false, cidade: false };
     statusCep("");
     if ($("fretePreview")) $("fretePreview").hidden = true;
+    atualizarCamposFrete(null);
     if ($("resumoDados")) $("resumoDados").textContent = "";
   }
 
@@ -752,6 +897,7 @@
       if (p.status === "aguardando") {
         linhas += '<div class="acoes-status">' +
           '<button class="editar-pedido" data-editar="' + p.id + '">✏️ Editar pedido</button>' +
+          '<a class="zap" target="_blank" rel="noopener" href="' + linkZapPedido(p) + '">💬 Avisar no WhatsApp</a>' +
           '<span class="suave">Você pode alterar itens, data e endereço até a homologação.</span>' +
           "</div>";
       }
@@ -974,14 +1120,25 @@
 
   function tentarEntrar() {
     var cfg = Store.config();
-    if ($("fSenhaAdmin").value.trim() === cfg.senhaAdmin) {
+    var digitada = $("fSenhaAdmin").value.trim();
+    function liberar() {
       try { sessionStorage.setItem("renascer.admin", "1"); } catch (e) {}
       fechar("ovSenha");
       toast("Bem-vindo, administrador!");
       setTimeout(function () { window.location.href = "admin.html"; }, 350);
-    } else {
+    }
+    function recusar() {
       $("erroSenha").hidden = false;
       vibrar([80, 60, 80]);
+    }
+    if (digitada === cfg.senhaAdmin) {
+      liberar();
+    } else if (digitada && typeof Nuvem !== "undefined" && Nuvem.recarregar()) {
+      Nuvem.verificarSenha(digitada, function (ok) {
+        if (ok) { Store.definirSenhaLocal(digitada); liberar(); } else { recusar(); }
+      });
+    } else {
+      recusar();
     }
   }
 
