@@ -553,7 +553,7 @@
     h += '<table class="imp-tabela"><thead><tr><th>Qtd</th><th>Item</th><th>Unitário</th><th>Subtotal</th></tr></thead><tbody>';
     (p.itens || []).forEach(function (i) {
       h += "<tr><td class='q'>" + (Number(i.qtd) || 0) + "</td>" +
-        "<td>" + esc(i.nome) + "</td>" +
+        "<td>" + esc(i.nome) + (i.observacao ? "<br><span class='suave'>📝 " + esc(i.observacao) + "</span>" : "") + "</td>" +
         "<td>" + moeda(i.preco) + "</td>" +
         "<td>" + moeda((Number(i.preco) || 0) * (Number(i.qtd) || 0)) + "</td></tr>";
     });

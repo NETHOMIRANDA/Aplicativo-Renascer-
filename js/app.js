@@ -206,7 +206,7 @@
                 ? '<span class="dot-estoque"></span> ' + (estoqueNum <= 5 ? 'Últimas ' + estoqueNum + ' un' : 'Estoque: ' + estoqueNum)
                 : '<span class="dot-esgotado"></span> Esgotado') +
             '</div>' +
-            (extras.length ? '<input class="obs-item" data-obs="' + i.id + '" placeholder="Obs.: escolha a cor / modelo" value="' + esc(obsItem[i.id] || "") + '" autocomplete="off">' : "") +
+            ((extras.length || /toalha/i.test(i.nome)) ? '<input class="obs-item" data-obs="' + i.id + '" placeholder="Obs.: escolha a cor / modelo" value="' + esc(obsItem[i.id] || "") + '" autocomplete="off">' : "") +
             '<div class="controle">' +
               '<button class="menos" data-act="menos" aria-label="Diminuir"' + (qtd === 0 ? ' disabled' : '') + '>−</button>' +
               '<span class="qtd">' + qtd + "</span>" +
