@@ -5,7 +5,11 @@
   "use strict";
 
   var CARRINHO_KEY = "renascer.carrinho.v1";
+  var EXT_KEY = "renascer.carrinho.ext.v1";
   var carrinho = lerCarrinho();
+  var extCarrinho = lerExt();
+  var selFoto = extCarrinho.selFoto || {};
+  var obsItem = extCarrinho.obsItem || {};
   var filtroCategoria = "Todas";
   var textoBusca = "";
 
@@ -35,6 +39,13 @@
 
   function gravarCarrinho() {
     try { localStorage.setItem(CARRINHO_KEY, JSON.stringify(carrinho)); } catch (e) {}
+  }
+
+  function lerExt() {
+    try { return JSON.parse(localStorage.getItem(EXT_KEY)) || {}; } catch (e) { return {}; }
+  }
+  function gravarExt() {
+    try { localStorage.setItem(EXT_KEY, JSON.stringify({ selFoto: selFoto, obsItem: obsItem })); } catch (e) {}
   }
 
   function fotoUrl(f) {
@@ -167,11 +178,19 @@
       var foto = fotoUrl(i.foto) || imgPlaceholder();
       var estoqueNum = Number(i.estoque) || 0;
       var temNoCarrinho = qtd > 0;
+      var extras = (i.fotos && i.fotos.length > 1) ? i.fotos.slice() : [];
+      var fotoEsc = selFoto[i.id] || "";
+      var fotoPrincipal = (fotoEsc ? fotoUrl(fotoEsc) : foto) || imgPlaceholder();
+      var atual = fotoEsc || i.foto || "";
       return '' +
         '<article class="card' + (temNoCarrinho ? ' card-no-carrinho' : '') + '" data-id="' + i.id + '">' +
           '<div class="card-foto">' +
-            '<img src="' + esc(foto) + '" alt="' + esc(i.nome) + '" loading="lazy" onerror="this.src=\'' + imgPlaceholder() + '\'">' +
+            '<img class="foto-principal" data-id="' + i.id + '" src="' + esc(fotoPrincipal) + '" alt="' + esc(i.nome) + '" loading="lazy" onerror="this.src=\'' + imgPlaceholder() + '\'">' +
             (temNoCarrinho ? '<span class="card-qtd-badge">' + qtd + ' no carrinho</span>' : '') +
+            (extras.length ? '<div class="mini-fotos">' + extras.map(function (f) {
+              var sel = String(fotoUrl(f)) === String(fotoUrl(atual));
+              return '<img class="mini' + (sel ? " sel" : "") + '" data-id="' + i.id + '" data-foto="' + esc(f) + '" src="' + esc(fotoUrl(f)) + '" loading="lazy" onerror="this.style.visibility=\'hidden\'">';
+            }).join("") + "</div>" : "") +
           "</div>" +
           '<div class="card-corpo">' +
             '<span class="cat">' + esc(i.categoria) + "</span>" +
@@ -182,6 +201,7 @@
                 ? '<span class="dot-estoque"></span> ' + (estoqueNum <= 5 ? 'Últimas ' + estoqueNum + ' un' : 'Estoque: ' + estoqueNum)
                 : '<span class="dot-esgotado"></span> Esgotado') +
             '</div>' +
+            (extras.length ? '<input class="obs-item" data-obs="' + i.id + '" placeholder="Obs.: escolha a cor / modelo" value="' + esc(obsItem[i.id] || "") + '" autocomplete="off">' : "") +
             '<div class="controle">' +
               '<button class="menos" data-act="menos" aria-label="Diminuir"' + (qtd === 0 ? ' disabled' : '') + '>−</button>' +
               '<span class="qtd">' + qtd + "</span>" +
@@ -197,6 +217,28 @@
         var btn = ev.target.closest ? ev.target.closest("[data-act]") : null;
         if (!btn) return;
         alterarQtd(id, btn.getAttribute("data-act") === "mais" ? 1 : -1);
+      });
+    });
+    // miniaturas: cliente escolhe a foto (variante) do item
+    Array.prototype.forEach.call(el.querySelectorAll(".mini-fotos img.mini"), function (m) {
+      m.addEventListener("click", function (ev) {
+        if (ev.stopPropagation) ev.stopPropagation();
+        var id = m.getAttribute("data-id");
+        var f = m.getAttribute("data-foto");
+        selFoto[id] = f;
+        gravarExt();
+        var principal = el.querySelector('.foto-principal[data-id="' + id + '"]');
+        if (principal) principal.src = fotoUrl(f);
+        Array.prototype.forEach.call(el.querySelectorAll('.mini-fotos img.mini[data-id="' + id + '"]'), function (x) { x.classList.remove("sel"); });
+        m.classList.add("sel");
+        vibrar([15]);
+      });
+    });
+    // observação do item (visível no card e no pedido)
+    Array.prototype.forEach.call(el.querySelectorAll(".obs-item"), function (inp) {
+      inp.addEventListener("input", function () {
+        obsItem[inp.getAttribute("data-obs")] = inp.value;
+        gravarExt();
       });
     });
   }
@@ -250,7 +292,9 @@
       var sub = (Number(it.preco) || 0) * carrinho[id];
       return '' +
         '<div class="linha-carrinho" data-id="' + id + '">' +
-          "<div><strong>" + esc(it.nome) + "</strong><br><span class='suave'>" + moeda(it.preco) + " / " + esc(it.unidade || "un") + "</span></div>" +
+          "<div><strong>" + esc(it.nome) + "</strong>" +
+          ((obsItem[id] || "").trim() ? "<br><span class='suave'>📝 " + esc(obsItem[id].trim()) + "</span>" : "") +
+          "<br><span class='suave'>" + moeda(it.preco) + " / " + esc(it.unidade || "un") + "</span></div>" +
           '<div class="controle">' +
             '<button class="menos" data-act="menos">−</button>' +
             '<span class="qtd">' + carrinho[id] + "</span>" +
@@ -736,7 +780,9 @@
         nome: it.nome,
         unidade: it.unidade,
         preco: Number(it.preco) || 0,
-        qtd: carrinho[id]
+        qtd: carrinho[id],
+        observacao: (obsItem[id] || "").trim(),
+        foto: selFoto[id] || it.foto || ""
       };
     });
 
@@ -775,7 +821,10 @@
 
     carrinho = {};
     carrinhoAnterior = null;
+    selFoto = {};
+    obsItem = {};
     gravarCarrinho();
+    gravarExt();
     definirModoEdicao(null);
     fechar("ovDados");
     fechar("ovCarrinho");
@@ -907,7 +956,7 @@
       linhas += gerarStepper(p.status);
 
       var itensHtml = (p.itens || []).map(function (i) {
-        return "<li>" + i.qtd + "× " + esc(i.nome) + " <span class='suave'>(" + moeda(i.preco) + ")</span></li>";
+        return "<li>" + i.qtd + "× " + esc(i.nome) + (i.observacao ? ' <span class="suave">(' + esc(i.observacao) + ")</span>" : "") + " <span class='suave'>(" + moeda(i.preco) + ")</span></li>";
       }).join("");
       linhas += "<ul class='resumo-itens'>" + itensHtml + "</ul>";
 

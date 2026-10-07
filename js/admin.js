@@ -199,7 +199,7 @@
       var cidadeUf = [cli.cidade, cli.uf].filter(Boolean).join(" / ");
       if (cli.cep || cidadeUf) h += "<br>CEP " + esc(cli.cep || "—") + (cidadeUf ? " • " + esc(cidadeUf) : "");
       h += "<ul>" + (p.itens || []).map(function (i) {
-        return "<li>" + i.qtd + "× " + esc(i.nome) + " — " + moeda(i.preco * i.qtd) + "</li>";
+        return "<li>" + i.qtd + "× " + esc(i.nome) + (i.observacao ? ' <span class="suave">(' + esc(i.observacao) + ")</span>" : "") + " — " + moeda(i.preco * i.qtd) + "</li>";
       }).join("") + "</ul>";
       var itensTotal = p.itensTotal != null ? Number(p.itensTotal) : Number(p.total) || 0;
       if (p.frete != null && Number(p.frete) > 0) {
@@ -263,7 +263,7 @@
     var txt = "Olá, " + (cli.nome || "") + "! Aqui é da " + (cfg.nomeLoja || "RENASCER") + ".\n" +
       "Seu pedido #" + p.numero + " foi *%STATUS%*." +
       "\n\nITENS:\n" +
-      (p.itens || []).map(function (i) { return "- " + i.qtd + "x " + i.nome; }).join("\n");
+      (p.itens || []).map(function (i) { return "- " + i.qtd + "x " + i.nome + (i.observacao ? " (" + i.observacao + ")" : ""); }).join("\n");
     if (Number(p.frete) > 0) txt += "\n\nSubtotal dos itens: " + moeda(itensTotal) +
       "\nFrete: " + moeda(Number(p.frete));
     txt += "\n*Total: " + moeda(p.total) + "*";
@@ -677,10 +677,12 @@
         '<div class="info">' +
           "<h4>" + esc(i.nome) + "</h4>" +
           '<div class="meta">' + esc(i.categoria) + " • " + moeda(i.preco) + "/" + esc(i.unidade) +
-          " • estoque " + (Number(i.estoque) || 0) + (i.ativo === false ? " • inativo" : "") + "</div>" +
+          " • estoque " + (Number(i.estoque) || 0) + (i.ativo === false ? " • inativo" : "") +
+          ((i.fotos || []).length ? " • 📷 " + i.fotos.length + " fotos" : "") + "</div>" +
           '<div class="acoes-item">' +
             '<button class="dest" data-act="editar">✏️ Editar</button>' +
             '<button data-act="foto">🖼 Foto</button>' +
+            '<button data-act="fotos">🖼️ Variantes</button>' +
             '<button data-act="ativo">' + (i.ativo === false ? "▶ Ativar" : "⏸ Ocultar") + "</button>" +
             '<button class="perigo" data-act="excluir">🗑</button>' +
           "</div>" +
@@ -695,6 +697,7 @@
         var act = b.getAttribute("data-act");
         if (act === "editar") editarItem(id);
         else if (act === "foto") escolherFotoItem(id);
+        else if (act === "fotos") escolherFotosExtras(id);
         else if (act === "ativo") alternarAtivo(id);
         else if (act === "excluir") excluirItem(id);
       });
@@ -722,7 +725,10 @@
       (galeria.length ? '<label class="campo">Ou escolha uma foto da galeria<select id="eGaleria">' +
         '<option value="">— manter atual —</option>' +
         galeria.map(function (g) { return '<option value="' + esc(g) + '">' + esc(String(g).slice(0, 40)) + "</option>"; }).join("") +
-        "</select></label>" : "");
+        "</select></label>" : "") +
+      '<div class="campo">Fotos extras (variantes)<br><button type="button" class="secundario grande" id="eFotosExtras">🖼️ Escolher fotos' + ((i.fotos || []).length ? " (" + i.fotos.length + ")" : "") + "</button>" +
+      ((i.fotos || []).length ? '<div class="mini-fotos-admin">' + i.fotos.map(function (f) { return '<img src="' + esc(fotoUrl(f)) + '" alt="" onerror="this.style.visibility=\'hidden\'">'; }).join("") + "</div>" : "") +
+      "</div>";
 
     abrirModal("Editar item", corpo, [
       { texto: "💾 Salvar alterações", acao: function () {
@@ -750,6 +756,60 @@
         fotoPendenteEdicao = dataUrl;
         $("ePreview").setAttribute("data-nova", "1");
         $("ePreview").innerHTML = '<img src="' + dataUrl + '" style="max-height:130px;border-radius:12px;" alt="">';
+      });
+    });
+    $("eFotosExtras").addEventListener("click", function () { escolherFotosExtras(id); });
+  }
+
+  /* fotos extras por item (variantes: ex. cores de toalha) — o cliente escolhe a foto no card */
+  function escolherFotosExtras(id) {
+    var i = Store.item(id);
+    if (!i) return;
+    var galeria = Store.fotos();
+    if (!galeria.length) {
+      toast("Nenhuma foto na galeria. Envie em 🖼️ Fotos.");
+      return;
+    }
+    var escolhidas = (Array.isArray(i.fotos) ? i.fotos : []).slice();
+    var corpo = '<p class="suave">Toque nas fotos para marcar/desmarcar as variantes (ex.: cores da toalha). No app do cliente, o item mostra as fotos juntas para escolher e um campo de observação.</p>' +
+      '<div class="galeria" id="galeriaExtras">' +
+      galeria.map(function (g) {
+        var sel = escolhidas.indexOf(g) !== -1;
+        return '<figure data-f="' + esc(g) + '"' + (sel ? ' class="sel"' : "") + '><img src="' + esc(fotoUrl(g)) + '" alt=""><figcaption>' + (sel ? "✓ selecionada" : "escolher") + "</figcaption></figure>";
+      }).join("") + "</div>";
+    abrirModal("Fotos extras • " + i.nome, corpo, [
+      { texto: "💾 Salvar (" + escolhidas.length + ")", acao: function () {
+        i.fotos = escolhidas;
+        Store.salvarItem(i);
+        fecharModal();
+        renderItensAdmin();
+        toast("Fotos extras salvas ✅");
+        editarItem(id);
+      } },
+      { texto: "Limpar fotos extras", classe: "secundario grande", acao: function () {
+        i.fotos = [];
+        Store.salvarItem(i);
+        fecharModal();
+        renderItensAdmin();
+        toast("Fotos extras removidas.");
+        editarItem(id);
+      } },
+      { texto: "Cancelar", classe: "secundario grande", acao: fecharModal }
+    ]);
+    Array.prototype.forEach.call($("galeriaExtras").querySelectorAll("figure"), function (fig) {
+      fig.addEventListener("click", function () {
+        var f = fig.getAttribute("data-f");
+        var idx = escolhidas.indexOf(f);
+        var cap = fig.querySelector("figcaption");
+        if (idx === -1) {
+          escolhidas.push(f);
+          fig.classList.add("sel");
+          if (cap) cap.textContent = "✓ selecionada";
+        } else {
+          escolhidas.splice(idx, 1);
+          fig.classList.remove("sel");
+          if (cap) cap.textContent = "escolher";
+        }
       });
     });
   }
