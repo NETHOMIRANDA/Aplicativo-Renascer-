@@ -27,6 +27,7 @@ Aplicativo (PWA) para **catálogo de locação, pedidos com homologação do adm
 1. Abre o app, escolhe os itens e toque em **Fazer pedido**.
 2. Preenche nome, telefone e data do evento → **Enviar pedido**.
 3. O pedido fica **aguardando homologação**.
+4. Pedido **concluído**: **🔁 Fazer igual** repete o pedido (muda só a data e o local do evento) e **🗑️ Excluir** tira da sua lista (o administrador mantém o histórico).
 
 **Administrador**
 1. Acesso pelo endereço `admin.html` **ou** pelo pontinho discreto no rodapé do app do cliente (senha padrão `A103114`).

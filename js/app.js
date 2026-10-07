@@ -654,6 +654,56 @@
     if (!silencioso) toast("Edição cancelada.");
   }
 
+  /* repete um pedido concluído: mesmos itens e dados, para mudar a data e o local do evento */
+  function repetirPedido(id) {
+    var p = Store.pedido(id);
+    if (!p) return;
+    var novo = {};
+    (p.itens || []).forEach(function (i) {
+      if (Store.item(i.id)) novo[String(i.id)] = Number(i.qtd) || 0;
+    });
+    if (!Object.keys(novo).length) {
+      toast("Os itens desse pedido saíram do catálogo.");
+      return;
+    }
+    if (editandoId) cancelarEdicao(true);
+    carrinho = novo;
+    gravarCarrinho();
+
+    var cli = p.cliente || {};
+    $("fNome").value = cli.nome || "";
+    $("fTelefone").value = cli.telefone || "";
+    $("fCep").value = cli.cep || "";
+    $("fEndereco").value = cli.endereco || "";
+    $("fBairro").value = cli.bairro || "";
+    $("fCidade").value = [cli.cidade, cli.uf].filter(Boolean).join("/");
+    $("fObs").value = cli.obs || "";
+    $("fData").value = ""; /* o cliente define a nova data do evento */
+    cepInvalido = false;
+    cepAuto = { endereco: false, bairro: false, cidade: false };
+    statusCep("");
+
+    definirModoEdicao(null); /* enviar cria um pedido novo (não edita o antigo) */
+    renderItens();
+    atualizarBarra();
+    renderCarrinho();
+    abrir("ovDados");
+    atualizarPreviewFrete();
+    toast("Pedido copiado! Altere a data e o local do evento 📅📍");
+    setTimeout(function () { $("fData").focus(); }, 350);
+  }
+
+  /* exclui pedido concluído da lista do cliente (o administrador mantém o registro) */
+  function excluirPedidoConcluido(id) {
+    var p = Store.pedido(id);
+    if (!p) return;
+    if (!window.confirm("Excluir o pedido #" + p.numero + " (" + dataBR(p.criadoEm) + ") da sua lista?\n\nEle continua no histórico do administrador.")) return;
+    Store.excluirPedido(id);   /* remove aqui e marca túmulo (não volta na sincronização) */
+    Store.removerMeuPedido(id); /* a ponte para de enviar este pedido */
+    renderStatus();
+    toast("Pedido #" + p.numero + " excluído 🗑️");
+  }
+
   function aoFecharOverlay(id) {
     if (editandoId && (id === "ovCarrinho" || id === "ovDados")) cancelarEdicao();
   }
@@ -901,6 +951,13 @@
           '<span class="suave">Você pode alterar itens, data e endereço até a homologação.</span>' +
           "</div>";
       }
+      if (p.status === "concluido") {
+        linhas += '<div class="acoes-status">' +
+          '<button class="secundario" data-repetir="' + p.id + '">🔁 Fazer igual</button>' +
+          '<button class="secundario" data-excluir="' + p.id + '">🗑️ Excluir</button>' +
+          '<span class="suave">Repete o pedido mudando a data e o local do evento.</span>' +
+          "</div>";
+      }
       if (p.editadoEm) {
         linhas += '<div class="editado-em suave">✏️ Editado em ' + esc(dataBR(p.editadoEm)) + "</div>";
       }
@@ -960,6 +1017,12 @@
         toast("Pagamento registrado! Aguardando confirmação ✅");
         renderStatus();
       });
+    });
+    Array.prototype.forEach.call(document.querySelectorAll("[data-repetir]"), function (b) {
+      b.addEventListener("click", function () { repetirPedido(b.getAttribute("data-repetir")); });
+    });
+    Array.prototype.forEach.call(document.querySelectorAll("[data-excluir]"), function (b) {
+      b.addEventListener("click", function () { excluirPedidoConcluido(b.getAttribute("data-excluir")); });
     });
     // desenha os QR codes
     Array.prototype.forEach.call(document.querySelectorAll("canvas.qr"), function (cv) {

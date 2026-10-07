@@ -232,6 +232,13 @@ var Store = (function () {
     }
   }
 
+  /* remove o pedido da lista deste aparelho (cliente exclui pedido concluído:
+     a ponte para de enviá-lo e o administrador mantém o registro) */
+  function removerMeuPedido(id) {
+    var l = meusIds().filter(function (x) { return String(x) !== String(id); });
+    try { localStorage.setItem(MEUS_KEY, JSON.stringify(l)); } catch (e) {}
+  }
+
   /* guarda a senha digitada (já validada na nuvem) sem alterar a data das configurações */
   function definirSenhaLocal(senha) {
     var d = ler();
@@ -439,6 +446,7 @@ var Store = (function () {
     pedido: pedido,
     novoPedido: novoPedido,
     meusIds: meusIds,
+    removerMeuPedido: removerMeuPedido,
     definirSenhaLocal: definirSenhaLocal,
     atualizarPedido: atualizarPedido,
     excluirPedido: excluirPedido,
