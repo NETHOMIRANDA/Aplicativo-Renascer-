@@ -1965,21 +1965,46 @@ canvas.qr {
   padding-bottom: 2px;
 }
 
-.mini-fotos img.mini {
-  width: 52px;
-  height: 52px;
-  object-fit: cover;
-  border-radius: 10px;
-  border: 2px solid transparent;
-  background: var(--cinza-100);
-  cursor: pointer;
+.mini-fotos figure.mini {
+  margin: 0;
+  width: 56px;
   flex: 0 0 auto;
+  text-align: center;
+  cursor: pointer;
+  border: 2px solid transparent;
+  border-radius: 10px;
+  background: var(--cinza-100);
   transition: var(--transicao);
 }
 
-.mini-fotos img.mini.sel {
+.mini-fotos figure.mini img {
+  width: 52px;
+  height: 52px;
+  object-fit: cover;
+  border-radius: 8px;
+  display: block;
+  margin: 2px auto 0;
+}
+
+.mini-fotos figure.mini.sel {
   border-color: var(--ouro-500);
   box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.35);
+}
+
+.mini-fotos figure.mini figcaption {
+  font-size: 10px;
+  line-height: 1.2;
+  color: var(--suave);
+  padding: 2px 2px 3px;
+  max-width: 56px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mini-fotos figure.mini.sel figcaption {
+  color: var(--ouro-600);
+  font-weight: 700;
 }
 
 .obs-item {
@@ -2021,6 +2046,82 @@ canvas.qr {
   height: 56px;
   object-fit: cover;
   border-radius: 8px;
+}
+
+.mini-fotos-lista {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+  max-width: 190px;
+}
+
+.mini-fotos-lista img {
+  width: 34px;
+  height: 34px;
+  object-fit: cover;
+  border-radius: 6px;
+}
+
+.mini-fotos-admin .extra-admin {
+  text-align: center;
+  width: 64px;
+}
+
+.mini-fotos-admin .extra-admin span {
+  display: block;
+  font-size: 11px;
+  color: var(--suave);
+  max-width: 64px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.extras-escolhidas {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 8px 0 4px;
+}
+
+.extra-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.extra-row img {
+  width: 48px;
+  height: 48px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.extra-row .cor-nome {
+  flex: 1;
+  padding: 9px 11px;
+  border: 1.5px solid var(--cinza-200);
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 14px;
+}
+
+.extra-row .cor-nome:focus {
+  outline: none;
+  border-color: var(--ouro-500);
+}
+
+.remover-extra {
+  border: 0;
+  background: var(--erro-fundo);
+  color: var(--erro-escuro);
+  border-radius: 8px;
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  font-size: 14px;
+  flex: 0 0 auto;
 }
 
 .editar-pedido {

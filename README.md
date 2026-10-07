@@ -34,7 +34,7 @@ Aplicativo (PWA) para **catálogo de locação, pedidos com homologação do adm
 2. Aba **Pedidos**: aprova (com data/observação) ou recusa (com motivo).
 3. Quando aprovado, o cliente vê a **tela de comemoração 🎉 com som** e o **QR Code PIX** é liberado.
 4. Cliente toca em *Já efetuei o pagamento* → você confirma em **Pedidos**.
-5. Aba **Itens**: cadastra, edita preço, estoque, **foto**, **fotos extras/variantes** (o cliente vê as fotos juntas, escolhe uma e pode escrever uma observação no item), oculta ou exclui.
+5. Aba **Itens**: cadastra, edite preço, estoque, **foto** e **fotos extras/variantes** (dê nome/cor a cada foto — o cliente vê as fotos juntas, escolhe a variante e a cor já chega no pedido), oculta ou exclui.
 6. Aba **Fotos**: envia as fotos dos itens (o app reduz o tamanho automaticamente).
 7. Aba **Ajustes**: senha, WhatsApp, chave PIX, **sincronização em nuvem** e textos.
 8. Aba **Backup**: exporta/importa tudo em um arquivo `.json`.

@@ -672,8 +672,12 @@
 
     el.innerHTML = lista.map(function (i) {
       var foto = fotoUrl(i.foto);
+      var extras = (i.fotos || []).map(function (f) { return typeof f === "string" ? f : (f.foto || ""); });
       return '<div class="item-admin' + (i.ativo === false ? " inativo" : "") + '" data-id="' + i.id + '">' +
         '<img class="mini" src="' + esc(foto || "img/icon-192.png") + '" alt="" onerror="this.src=\'img/icon-192.png\'">' +
+        (extras.length ? '<div class="mini-fotos-lista">' + extras.map(function (f) {
+          return '<img src="' + esc(fotoUrl(f)) + '" alt="" title="' + esc(extras.length + " foto(s)") + '" onerror="this.style.visibility=\'hidden\'">';
+        }).join("") + "</div>" : "") +
         '<div class="info">' +
           "<h4>" + esc(i.nome) + "</h4>" +
           '<div class="meta">' + esc(i.categoria) + " • " + moeda(i.preco) + "/" + esc(i.unidade) +
@@ -727,7 +731,11 @@
         galeria.map(function (g) { return '<option value="' + esc(g) + '">' + esc(String(g).slice(0, 40)) + "</option>"; }).join("") +
         "</select></label>" : "") +
       '<div class="campo">Fotos extras (variantes)<br><button type="button" class="secundario grande" id="eFotosExtras">🖼️ Escolher fotos' + ((i.fotos || []).length ? " (" + i.fotos.length + ")" : "") + "</button>" +
-      ((i.fotos || []).length ? '<div class="mini-fotos-admin">' + i.fotos.map(function (f) { return '<img src="' + esc(fotoUrl(f)) + '" alt="" onerror="this.style.visibility=\'hidden\'">'; }).join("") + "</div>" : "") +
+      ((i.fotos || []).length ? '<div class="mini-fotos-admin">' + i.fotos.map(function (f) {
+        var nome = typeof f === "string" ? f : (f.foto || "");
+        var cor = typeof f === "string" ? "" : (f.cor || "");
+        return '<div class="extra-admin"><img src="' + esc(fotoUrl(nome)) + '" alt="" onerror="this.style.visibility=\'hidden\'">' + (cor ? "<span>" + esc(cor) + "</span>" : "") + "</div>";
+      }).join("") + "</div>" : "") +
       "</div>";
 
     abrirModal("Editar item", corpo, [
@@ -761,7 +769,8 @@
     $("eFotosExtras").addEventListener("click", function () { escolherFotosExtras(id); });
   }
 
-  /* fotos extras por item (variantes: ex. cores de toalha) — o cliente escolhe a foto no card */
+  /* fotos extras por item (variantes: ex. cores de toalha) — o admin nomeia cada
+     variante e o cliente escolhe a foto; a cor escolhida chega no pedido */
   function escolherFotosExtras(id) {
     var i = Store.item(id);
     if (!i) return;
@@ -770,18 +779,77 @@
       toast("Nenhuma foto na galeria. Envie em 🖼️ Fotos.");
       return;
     }
-    var escolhidas = (Array.isArray(i.fotos) ? i.fotos : []).slice();
-    var corpo = '<p class="suave">Toque nas fotos para marcar/desmarcar as variantes (ex.: cores da toalha). No app do cliente, o item mostra as fotos juntas para escolher e um campo de observação.</p>' +
-      '<div class="galeria" id="galeriaExtras">' +
-      galeria.map(function (g) {
-        var sel = escolhidas.indexOf(g) !== -1;
+    var escolhidas = (Array.isArray(i.fotos) ? i.fotos : []).map(function (f) {
+      return typeof f === "string" ? { foto: f, cor: "" } : { foto: f.foto || "", cor: f.cor || "" };
+    });
+
+    function coletarCores() {
+      var ex = $("extrasEscolhidas");
+      if (!ex) return;
+      Array.prototype.forEach.call(ex.querySelectorAll(".cor-nome"), function (inp) {
+        var idx = Number(inp.getAttribute("data-idx"));
+        if (escolhidas[idx]) escolhidas[idx].cor = inp.value.trim();
+      });
+    }
+    function galeriaHtml() {
+      return '<div class="galeria" id="galeriaExtras">' + galeria.map(function (g) {
+        var sel = escolhidas.some(function (e) { return e.foto === g; });
         return '<figure data-f="' + esc(g) + '"' + (sel ? ' class="sel"' : "") + '><img src="' + esc(fotoUrl(g)) + '" alt=""><figcaption>' + (sel ? "✓ selecionada" : "escolher") + "</figcaption></figure>";
       }).join("") + "</div>";
+    }
+    function escolhidasHtml() {
+      return '<div class="extras-escolhidas" id="extrasEscolhidas">' + escolhidas.map(function (e, idx) {
+        return '<div class="extra-row" data-f="' + esc(e.foto) + '">' +
+          '<img src="' + esc(fotoUrl(e.foto)) + '" alt="" onerror="this.style.visibility=\'hidden\'">' +
+          '<input class="cor-nome" data-idx="' + idx + '" value="' + esc(e.cor) + '" placeholder="Cor / nome (ex.: Branca)">' +
+          '<button type="button" class="remover-extra" data-f="' + esc(e.foto) + '" title="Remover">✕</button>' +
+        "</div>";
+      }).join("") + "</div>";
+    }
+    function refresh() {
+      coletarCores();
+      var g = $("galeriaExtras");
+      if (g) g.innerHTML = galeriaHtml().replace(/^<div class="galeria" id="galeriaExtras">|<\/div>$/g, "");
+      var ex = $("extrasEscolhidas");
+      if (ex) ex.innerHTML = escolhidasHtml().replace(/^<div class="extras-escolhidas" id="extrasEscolhidas">|<\/div>$/g, "");
+    }
+
+    var corpo = '<p class="suave">1) Toque nas fotos para marcar/desmarcar. 2) Dê o <strong>nome/cor</strong> de cada variante — o cliente escolhe a foto e a cor já chega no pedido.</p>' +
+      "<h4>Marcar fotos</h4>" + galeriaHtml() +
+      "<h4>Escolhidas — nome/cor</h4>" + escolhidasHtml();
+
+    function handlerExtras(ev) {
+      var fig = ev.target.closest ? ev.target.closest("figure") : null;
+      if (fig && fig.getAttribute("data-f")) {
+        var f = fig.getAttribute("data-f");
+        var idx = -1;
+        for (var k = 0; k < escolhidas.length; k++) if (escolhidas[k].foto === f) { idx = k; break; }
+        coletarCores();
+        if (idx === -1) escolhidas.push({ foto: f, cor: "" });
+        else escolhidas.splice(idx, 1);
+        refresh();
+        return;
+      }
+      var rem = ev.target.closest ? ev.target.closest(".remover-extra") : null;
+      if (rem) {
+        var rf = rem.getAttribute("data-f");
+        for (var j = escolhidas.length - 1; j >= 0; j--) if (escolhidas[j].foto === rf) escolhidas.splice(j, 1);
+        refresh();
+      }
+    }
+    $("modalCorpo").addEventListener("click", handlerExtras);
+
+    function encerrar() {
+      $("modalCorpo").removeEventListener("click", handlerExtras);
+      fecharModal();
+    }
+
     abrirModal("Fotos extras • " + i.nome, corpo, [
       { texto: "💾 Salvar (" + escolhidas.length + ")", acao: function () {
+        coletarCores();
         i.fotos = escolhidas;
         Store.salvarItem(i);
-        fecharModal();
+        encerrar();
         renderItensAdmin();
         toast("Fotos extras salvas ✅");
         editarItem(id);
@@ -789,29 +857,13 @@
       { texto: "Limpar fotos extras", classe: "secundario grande", acao: function () {
         i.fotos = [];
         Store.salvarItem(i);
-        fecharModal();
+        encerrar();
         renderItensAdmin();
         toast("Fotos extras removidas.");
         editarItem(id);
       } },
-      { texto: "Cancelar", classe: "secundario grande", acao: fecharModal }
+      { texto: "Cancelar", classe: "secundario grande", acao: encerrar }
     ]);
-    Array.prototype.forEach.call($("galeriaExtras").querySelectorAll("figure"), function (fig) {
-      fig.addEventListener("click", function () {
-        var f = fig.getAttribute("data-f");
-        var idx = escolhidas.indexOf(f);
-        var cap = fig.querySelector("figcaption");
-        if (idx === -1) {
-          escolhidas.push(f);
-          fig.classList.add("sel");
-          if (cap) cap.textContent = "✓ selecionada";
-        } else {
-          escolhidas.splice(idx, 1);
-          fig.classList.remove("sel");
-          if (cap) cap.textContent = "escolher";
-        }
-      });
-    });
   }
 
   function escolherFotoItem(id) {

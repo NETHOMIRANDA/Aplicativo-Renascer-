@@ -178,7 +178,9 @@
       var foto = fotoUrl(i.foto) || imgPlaceholder();
       var estoqueNum = Number(i.estoque) || 0;
       var temNoCarrinho = qtd > 0;
-      var extras = (i.fotos && i.fotos.length > 1) ? i.fotos.slice() : [];
+      var extras = (i.fotos && i.fotos.length > 1) ? i.fotos.map(function (f) {
+        return typeof f === "string" ? { foto: f, cor: "" } : { foto: f.foto || "", cor: f.cor || "" };
+      }) : [];
       var fotoEsc = selFoto[i.id] || "";
       var fotoPrincipal = (fotoEsc ? fotoUrl(fotoEsc) : foto) || imgPlaceholder();
       var atual = fotoEsc || i.foto || "";
@@ -187,9 +189,12 @@
           '<div class="card-foto">' +
             '<img class="foto-principal" data-id="' + i.id + '" src="' + esc(fotoPrincipal) + '" alt="' + esc(i.nome) + '" loading="lazy" onerror="this.src=\'' + imgPlaceholder() + '\'">' +
             (temNoCarrinho ? '<span class="card-qtd-badge">' + qtd + ' no carrinho</span>' : '') +
-            (extras.length ? '<div class="mini-fotos">' + extras.map(function (f) {
-              var sel = String(fotoUrl(f)) === String(fotoUrl(atual));
-              return '<img class="mini' + (sel ? " sel" : "") + '" data-id="' + i.id + '" data-foto="' + esc(f) + '" src="' + esc(fotoUrl(f)) + '" loading="lazy" onerror="this.style.visibility=\'hidden\'">';
+            (extras.length ? '<div class="mini-fotos">' + extras.map(function (v) {
+              var sel = String(fotoUrl(v.foto)) === String(fotoUrl(atual));
+              return '<figure class="mini' + (sel ? " sel" : "") + '" data-id="' + i.id + '" data-foto="' + esc(v.foto) + '" data-cor="' + esc(v.cor) + '">' +
+                '<img src="' + esc(fotoUrl(v.foto)) + '" loading="lazy" onerror="this.style.visibility=\'hidden\'">' +
+                (v.cor ? "<figcaption>" + esc(v.cor) + "</figcaption>" : "") +
+              "</figure>";
             }).join("") + "</div>" : "") +
           "</div>" +
           '<div class="card-corpo">' +
@@ -220,17 +225,25 @@
       });
     });
     // miniaturas: cliente escolhe a foto (variante) do item
-    Array.prototype.forEach.call(el.querySelectorAll(".mini-fotos img.mini"), function (m) {
+    Array.prototype.forEach.call(el.querySelectorAll(".mini-fotos figure.mini"), function (m) {
       m.addEventListener("click", function (ev) {
         if (ev.stopPropagation) ev.stopPropagation();
         var id = m.getAttribute("data-id");
         var f = m.getAttribute("data-foto");
+        var cor = m.getAttribute("data-cor") || "";
         selFoto[id] = f;
         gravarExt();
         var principal = el.querySelector('.foto-principal[data-id="' + id + '"]');
         if (principal) principal.src = fotoUrl(f);
-        Array.prototype.forEach.call(el.querySelectorAll('.mini-fotos img.mini[data-id="' + id + '"]'), function (x) { x.classList.remove("sel"); });
+        Array.prototype.forEach.call(el.querySelectorAll('.mini-fotos figure.mini[data-id="' + id + '"]'), function (x) { x.classList.remove("sel"); });
         m.classList.add("sel");
+        /* a cor da variante escolhida ja preenche a observacao (o cliente pode editar) */
+        if (cor) {
+          var obs = el.querySelector('.obs-item[data-obs="' + id + '"]');
+          if (obs) obs.value = cor;
+          obsItem[id] = cor;
+          gravarExt();
+        }
         vibrar([15]);
       });
     });
