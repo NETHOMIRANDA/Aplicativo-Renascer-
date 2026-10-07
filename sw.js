@@ -1,5 +1,5 @@
 /* sw.js - funciona offline (PWA) */
-var CACHE = "renascer-v9";
+var CACHE = "renascer-v10";
 
 var ARQUIVOS = [
   "./",
@@ -48,7 +48,12 @@ var ARQUIVOS = [
 self.addEventListener("install", function (e) {
   e.waitUntil(
     caches.open(CACHE).then(function (c) {
-      return c.addAll(ARQUIVOS);
+      /* "reload" ignora o cache HTTP do navegador/GitHub Pages: guarda SEMPRE a versão mais nova */
+      return Promise.all(ARQUIVOS.map(function (u) {
+        return fetch(new Request(u, { cache: "reload" })).then(function (r) {
+          if (r && r.ok) return c.put(u, r);
+        }).catch(function () {});
+      }));
     }).then(function () {
       return self.skipWaiting();
     })
@@ -69,18 +74,37 @@ self.addEventListener("activate", function (e) {
 
 self.addEventListener("fetch", function (e) {
   if (e.request.method !== "GET") return;
+  var mesmaOrigem = e.request.url.indexOf(location.origin) === 0;
+  if (!mesmaOrigem) return; /* CEP, rota, ponte do Google: sempre direto na internet */
+
+  var ehImagem = /\.(jpe?g|png|gif|webp|svg|ico)(\?|$)/i.test(e.request.url);
+  if (ehImagem) {
+    /* fotos mudam pouco: cache primeiro (rápido e economiza dados) */
+    e.respondWith(
+      caches.match(e.request).then(function (cacheado) {
+        return cacheado || fetch(e.request).then(function (resp) {
+          if (resp && resp.ok) {
+            var copia = resp.clone();
+            caches.open(CACHE).then(function (c) { c.put(e.request, copia); });
+          }
+          return resp;
+        });
+      })
+    );
+    return;
+  }
+
+  /* páginas, scripts e estilos: rede primeiro, para o cliente sempre receber a versão publicada;
+     sem internet, usa a cópia guardada */
   e.respondWith(
-    caches.match(e.request, { ignoreSearch: false }).then(function (cacheado) {
-      var rede = fetch(e.request).then(function (resp) {
-        if (resp && resp.ok && e.request.url.indexOf(location.origin) === 0) {
-          var copia = resp.clone();
-          caches.open(CACHE).then(function (c) { c.put(e.request, copia); });
-        }
-        return resp;
-      }).catch(function () {
-        return cacheado;
-      });
-      return cacheado || rede;
+    fetch(e.request, { cache: "no-cache" }).then(function (resp) {
+      if (resp && resp.ok) {
+        var copia = resp.clone();
+        caches.open(CACHE).then(function (c) { c.put(e.request, copia); });
+      }
+      return resp;
+    }).catch(function () {
+      return caches.match(e.request, { ignoreSearch: true });
     })
   );
 });
