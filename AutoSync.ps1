@@ -1,4 +1,4 @@
-﻿$folder = "C:\Users\antonio.fmiranda\Desktop\Modelo Renascer 1 - Copia"
+﻿$folder = "C:\Users\netho\OneDrive\Desktop\Modelo Renascer 1"
 $filter = '*.*'
 
 $watcher = New-Object System.IO.FileSystemWatcher
@@ -18,7 +18,7 @@ $action = {
 
     Write-Host "Detectado: $changeType em $path" -ForegroundColor Yellow
     
-    Set-Location -Path "C:\Users\antonio.fmiranda\Desktop\Modelo Renascer 1 - Copia"
+    Set-Location -Path "C:\Users\netho\OneDrive\Desktop\Modelo Renascer 1"
     
     Start-Sleep -Seconds 2
     

@@ -1,5 +1,5 @@
 /* sw.js - funciona offline (PWA) */
-var CACHE = "renascer-v16";
+var CACHE = "renascer-v17";
 
 var ARQUIVOS = [
   "./",
@@ -79,15 +79,19 @@ self.addEventListener("fetch", function (e) {
 
   var ehImagem = /\.(jpe?g|png|gif|webp|svg|ico)(\?|$)/i.test(e.request.url);
   if (ehImagem) {
-    /* fotos mudam pouco: cache primeiro (rápido e economiza dados) */
+    /* fotos: REDE PRIMEIRO - se o arquivo foi trocado no GitHub (mesmo
+       nome, conteudo novo), o cliente recebe a versao nova. Sem internet,
+       usa a copia guardada. */
     e.respondWith(
-      caches.match(e.request).then(function (cacheado) {
-        return cacheado || fetch(e.request).then(function (resp) {
-          if (resp && resp.ok) {
-            var copia = resp.clone();
-            caches.open(CACHE).then(function (c) { c.put(e.request, copia); });
-          }
-          return resp;
+      fetch(e.request, { cache: "no-cache" }).then(function (resp) {
+        if (resp && resp.ok) {
+          var copia = resp.clone();
+          caches.open(CACHE).then(function (c) { c.put(e.request, copia); });
+        }
+        return resp;
+      }).catch(function () {
+        return caches.match(e.request, { ignoreSearch: true }).then(function (cacheado) {
+          return cacheado || caches.match("img/icon-192.png");
         });
       })
     );
